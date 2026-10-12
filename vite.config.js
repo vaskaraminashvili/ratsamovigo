@@ -16,6 +16,14 @@ export default defineConfig({
                 bunny('Instrument Sans', {
                     weights: [400, 500, 600],
                 }),
+                bunny('Noto Sans Georgian', {
+                    weights: [400, 500, 700],
+                    subsets: ['georgian', 'latin'],
+                }),
+                bunny('Noto Serif Georgian', {
+                    weights: [500, 700],
+                    subsets: ['georgian', 'latin'],
+                }),
             ],
         }),
         tailwindcss(),

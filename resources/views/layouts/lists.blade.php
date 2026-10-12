@@ -3,7 +3,7 @@
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-dvh bg-zinc-100 text-zinc-900 antialiased">
+    <body class="slip-ui min-h-dvh bg-crate font-slip text-ink antialiased">
         {{ $slot }}
 
         @persist('toast')

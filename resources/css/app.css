@@ -26,6 +26,17 @@
     --color-accent: var(--color-neutral-800);
     --color-accent-content: var(--color-neutral-800);
     --color-accent-foreground: var(--color-white);
+
+    --font-slip: 'Noto Sans Georgian', ui-sans-serif, system-ui, sans-serif, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji';
+    --font-sign: 'Noto Serif Georgian', 'Noto Sans Georgian', ui-serif, serif, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji';
+
+    --color-crate: #d7e3dc;
+    --color-slip: #fbfcf8;
+    --color-ink: #1a2420;
+    --color-tomato: #c43122;
+    --color-rule: #d5ddd6;
+    --color-bought: #3e5146;
+    --color-wine: #7a1f3d;
 }
 
 @layer theme {
@@ -59,6 +70,17 @@ input:focus[data-flux-control],
 textarea:focus[data-flux-control],
 select:focus[data-flux-control] {
     @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
+}
+
+.slip-ui :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .slip-mark {
+        transition: opacity 160ms ease-out;
+    }
 }
 
 /* \[:where(&)\]:size-4 {

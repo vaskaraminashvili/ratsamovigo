@@ -19,6 +19,7 @@ class ListAppearance
      * @var list<string>
      */
     public const ACCENTS = [
+        '#c43122',
         '#059669',
         '#d97706',
         '#e11d48',

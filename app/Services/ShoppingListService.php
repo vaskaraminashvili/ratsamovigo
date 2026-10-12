@@ -49,6 +49,7 @@ class ShoppingListService
             'user_id' => $user->id,
             'name' => $data['name'],
             'emoji' => $this->blankToNull($data['emoji'] ?? null),
+            'accent_color' => '#c43122',
         ]);
 
         $this->lists->addMember($list, $user, ListRole::Owner);

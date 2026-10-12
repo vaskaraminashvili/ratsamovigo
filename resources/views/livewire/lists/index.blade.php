@@ -1,40 +1,40 @@
-<div class="mx-auto min-h-dvh w-full max-w-lg bg-white">
-    <header class="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-zinc-200 bg-white/95 px-4 backdrop-blur">
-        <a href="{{ route('lists.index') }}" class="text-lg font-semibold" wire:navigate>სიები</a>
-        <div class="flex items-center gap-3 text-sm">
-            <a href="{{ route('profile.edit') }}" class="text-zinc-600" wire:navigate>პარამეტრები</a>
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="text-zinc-600">გასვლა</button>
-            </form>
+<div class="mx-auto min-h-dvh w-full max-w-lg">
+    <header class="sticky top-0 z-20 bg-crate/95 px-4 pb-4 pt-5 backdrop-blur">
+        <div class="flex items-end justify-between gap-4">
+            <h1 class="font-sign text-4xl leading-none">სიები</h1>
+            <div class="flex items-center gap-4 pb-1 text-sm text-bought">
+                <a href="{{ route('profile.edit') }}" wire:navigate>პარამეტრები</a>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit">გასვლა</button>
+                </form>
+            </div>
         </div>
+
+        <form wire:submit="createList" class="mt-5 flex items-center gap-2">
+            <label class="sr-only" for="list-emoji">ემოჯი</label>
+            <input id="list-emoji" wire:model="emoji" type="text" maxlength="8" placeholder="🛒" class="h-12 w-14 border border-ink/15 bg-slip text-center text-base">
+            <label class="sr-only" for="list-name">სიის სახელი</label>
+            <input id="list-name" wire:model="name" type="text" placeholder="სასურსათო" class="h-12 min-w-0 flex-1 border border-ink/15 bg-slip px-3 text-base">
+            <button type="submit" class="h-12 shrink-0 bg-tomato px-4 text-sm font-medium text-white">შექმნა</button>
+        </form>
+        @error('name') <p class="mt-2 text-sm text-wine">{{ $message }}</p> @enderror
     </header>
 
-    <div class="px-4 pb-28 pt-4">
-        <form wire:submit="createList" class="space-y-3">
-            <label class="block">
-                <span class="mb-1 block text-sm font-medium">ახალი სია</span>
-                <input wire:model="name" type="text" placeholder="სასურსათო" class="h-12 w-full rounded-2xl border border-zinc-300 px-4 text-base outline-none focus:border-emerald-600">
-            </label>
-            @error('name') <p class="text-sm text-rose-600">{{ $message }}</p> @enderror
-            <label class="block">
-                <span class="mb-1 block text-sm font-medium">ემოჯი</span>
-                <input wire:model="emoji" type="text" maxlength="8" placeholder="🛒" class="h-12 w-full rounded-2xl border border-zinc-300 px-4 text-base outline-none focus:border-emerald-600">
-            </label>
-            <button type="submit" class="h-12 w-full rounded-2xl bg-emerald-600 text-base font-semibold text-white">შექმნა</button>
-        </form>
-
-        <div class="mt-6 space-y-3">
+    <div class="px-4 pb-16">
+        <div class="bg-slip">
             @forelse ($lists as $list)
-                <a href="{{ route('lists.show', $list) }}" wire:navigate class="flex items-center gap-3 rounded-2xl border border-zinc-200 p-4" style="border-left: 6px solid {{ $list->accent_color }}">
-                    <span class="text-2xl">{{ $list->emoji ?: '📝' }}</span>
-                    <span class="min-w-0 flex-1">
-                        <span class="block truncate text-base font-semibold">{{ $list->name }}</span>
-                        <span class="text-sm text-zinc-500">დარჩენილი: {{ $list->open_items_count }}</span>
+                <a href="{{ route('lists.show', $list) }}" wire:navigate class="flex items-center gap-3 border-b border-rule px-4 py-4 last:border-b-0">
+                    <span class="size-2.5 shrink-0" style="background: {{ $list->accent_color }}"></span>
+                    <span class="text-2xl leading-none">{{ $list->emoji ?: '📝' }}</span>
+                    <span class="min-w-0 flex-1 truncate text-base font-medium">{{ $list->name }}</span>
+                    <span class="shrink-0">
+                        <span class="font-sign text-xl leading-none text-tomato">{{ $list->open_items_count }}</span>
+                        <span class="text-sm text-bought">დარჩა</span>
                     </span>
                 </a>
             @empty
-                <p class="rounded-2xl bg-zinc-50 px-4 py-8 text-center text-zinc-500">ჯერ სია არ გაქვთ.</p>
+                <p class="px-4 py-10 text-bought">პირველი სია აქ დაიწყება.</p>
             @endforelse
         </div>
     </div>

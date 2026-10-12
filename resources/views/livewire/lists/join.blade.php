@@ -1,3 +1,3 @@
-<div class="mx-auto flex min-h-dvh w-full max-w-lg items-center justify-center px-4 text-zinc-500">
+<div class="mx-auto flex min-h-dvh w-full max-w-lg items-center px-4 text-bought">
     სიას ვუერთდებით...
 </div>
