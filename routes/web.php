@@ -14,4 +14,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('join/{token}', Join::class)->name('lists.join');
 });
 
+
 require __DIR__.'/settings.php';
