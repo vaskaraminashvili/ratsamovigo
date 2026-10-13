@@ -7,6 +7,7 @@ use App\Models\ListMember;
 use App\Models\ShareLink;
 use App\Models\ShoppingList;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 
 interface ShoppingListRepository
@@ -29,6 +30,10 @@ interface ShoppingListRepository
      * @param  array<string, mixed>  $attributes
      */
     public function update(ShoppingList $list, array $attributes): ShoppingList;
+
+    public function replaceBackground(ShoppingList $list, UploadedFile $file): void;
+
+    public function clearBackground(ShoppingList $list): void;
 
     public function delete(ShoppingList $list): void;
 

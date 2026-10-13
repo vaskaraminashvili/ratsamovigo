@@ -23,20 +23,28 @@
     --color-zinc-900: #171717;
     --color-zinc-950: #0a0a0a;
 
-    --color-accent: var(--color-neutral-800);
-    --color-accent-content: var(--color-neutral-800);
-    --color-accent-foreground: var(--color-white);
+    --color-accent: #7b5cf6;
+    --color-accent-content: #7b5cf6;
+    --color-accent-foreground: #ffffff;
 
     --font-slip: 'Noto Sans Georgian', ui-sans-serif, system-ui, sans-serif, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji';
-    --font-sign: 'Noto Serif Georgian', 'Noto Sans Georgian', ui-serif, serif, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji';
+    --font-sign: 'Noto Sans Georgian', ui-sans-serif, system-ui, sans-serif, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji';
 
-    --color-crate: #d7e3dc;
-    --color-slip: #fbfcf8;
-    --color-ink: #1a2420;
-    --color-tomato: #c43122;
-    --color-rule: #d5ddd6;
-    --color-bought: #3e5146;
-    --color-wine: #7a1f3d;
+    --color-floor: #e6e0f4;
+    --color-crate: #e6e0f4;
+    --color-slip: #ffffff;
+    --color-phone: #f4f1fa;
+    --color-ink: #1c1730;
+    --color-marker: #7b5cf6;
+    --color-tomato: #7b5cf6;
+    --color-rule: #ece6f4;
+    --color-bought: #8b849c;
+    --color-wine: #e11d48;
+    --color-blush: #ffe4d8;
+    --color-blush-ink: #d85a3a;
+    --color-cream: #fff3ea;
+    --color-lime: #d4f562;
+    --color-coral: #ff8b6a;
 }
 
 @layer theme {
@@ -77,10 +85,111 @@ select:focus[data-flux-control] {
     outline-offset: 3px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-    .slip-mark {
-        transition: opacity 160ms ease-out;
+@keyframes slip-rise {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
     }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes slip-up {
+    from {
+        transform: translateY(110%);
+    }
+
+    to {
+        transform: none;
+    }
+}
+
+@keyframes slip-scrim {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .slip-rise {
+        animation: slip-rise 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .slip-up {
+        animation: slip-up 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .slip-scrim {
+        animation: slip-scrim 240ms ease-out both;
+    }
+
+    .slip-box {
+        transition: background-color 200ms ease, border-color 200ms ease, transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .slip-box:active {
+        transform: scale(0.92);
+    }
+
+    .slip-mark {
+        transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1), opacity 180ms ease;
+    }
+
+    .slip-press {
+        transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .slip-press:active {
+        transform: scale(0.98);
+    }
+
+    .slip-name {
+        transition: color 220ms ease;
+    }
+
+    .aisle-switch::after {
+        transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+}
+
+.aisle-float {
+    box-shadow: 0 18px 40px rgba(48, 56, 88, 0.12);
+}
+
+.aisle-switch {
+    position: relative;
+    width: 44px;
+    height: 26px;
+    flex-shrink: 0;
+    border-radius: 999px;
+    background: #e4e6ec;
+    appearance: none;
+}
+
+.aisle-switch::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    border-radius: 999px;
+    background: #fff;
+}
+
+.aisle-switch:checked {
+    background: #7b5cf6;
+}
+
+.aisle-switch:checked::after {
+    transform: translateX(18px);
 }
 
 /* \[:where(&)\]:size-4 {

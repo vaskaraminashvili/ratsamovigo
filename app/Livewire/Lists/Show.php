@@ -16,12 +16,15 @@ use App\Services\PollService;
 use App\Services\ShareLinkService;
 use App\Services\ShoppingListService;
 use App\Support\ListAppearance;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\FileNotPreviewableException;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 
 #[Layout('layouts.lists')]
@@ -34,17 +37,29 @@ class Show extends Component
 
     public string $panel = '';
 
-    public bool $showChecked = false;
+    public string $screen = 'list';
+
+    public string $compose = 'item';
+
+    public bool $showChecked = true;
+
+    public bool $onlyMine = false;
 
     public string $itemName = '';
 
     public string $itemQuantity = '';
 
+    public string $itemUnit = 'ცალი';
+
+    public string $itemGroup = '';
+
+    public string $dishName = '';
+
     public string $itemEmoji = '';
 
     public string $itemNote = '';
 
-    public mixed $itemPhoto = null;
+    public ?TemporaryUploadedFile $itemPhoto = null;
 
     public ?int $editingItemId = null;
 
@@ -73,7 +88,7 @@ class Show extends Component
 
     public bool $showAuthor = true;
 
-    public mixed $backgroundUpload = null;
+    public ?TemporaryUploadedFile $backgroundUpload = null;
 
     public function mount(ShoppingList $shoppingList, ShoppingListService $lists): void
     {
@@ -83,10 +98,36 @@ class Show extends Component
 
     public function addItem(ListItemService $items): void
     {
-        $validated = $this->validateItem();
-
-        $items->add($this->user(), $this->shoppingList, $validated, $this->itemPhoto);
+        $items->add($this->user(), $this->shoppingList, $this->preparedItem(), $this->itemPhoto);
         $this->resetItemForm();
+        $this->panel = '';
+    }
+
+    public function startCreate(): void
+    {
+        $this->resetItemForm();
+        $this->compose = 'item';
+        $this->panel = 'create';
+    }
+
+    public function startIngredient(string $group): void
+    {
+        $this->resetItemForm();
+        $this->compose = 'dish';
+        $this->itemGroup = $group;
+        $this->dishName = $group;
+        $this->panel = 'create';
+    }
+
+    public function bumpQuantity(int $step): void
+    {
+        if ($this->itemQuantity !== '' && ! ctype_digit($this->itemQuantity)) {
+            return;
+        }
+
+        $current = $this->itemQuantity === '' ? 1 : (int) $this->itemQuantity;
+
+        $this->itemQuantity = (string) max(1, $current + $step);
     }
 
     public function editItem(int $itemId): void
@@ -99,10 +140,12 @@ class Show extends Component
 
         $this->editingItemId = $item->id;
         $this->itemName = $item->name;
-        $this->itemQuantity = (string) $item->quantity;
+        $this->itemGroup = (string) $item->group_name;
+        $this->splitQuantity($item->quantity);
         $this->itemEmoji = (string) $item->emoji;
         $this->itemNote = (string) $item->note;
         $this->itemPhoto = null;
+        $this->compose = 'item';
         $this->panel = 'item';
     }
 
@@ -112,9 +155,7 @@ class Show extends Component
             return;
         }
 
-        $validated = $this->validateItem();
-
-        $items->update($this->user(), $this->shoppingList, $this->editingItemId, $validated, $this->itemPhoto);
+        $items->update($this->user(), $this->shoppingList, $this->editingItemId, $this->preparedItem(), $this->itemPhoto);
         $this->resetItemForm();
         $this->panel = '';
     }
@@ -123,11 +164,17 @@ class Show extends Component
     {
         $items->delete($this->user(), $this->shoppingList, $itemId);
         $this->resetItemForm();
+        $this->panel = '';
     }
 
     public function toggleCheck(int $itemId, ListItemService $items): void
     {
         $items->toggleCheck($this->user(), $this->shoppingList, $itemId);
+    }
+
+    public function toggleGroup(string $groupName, ListItemService $items): void
+    {
+        $items->toggleGroup($this->user(), $this->shoppingList, $groupName);
     }
 
     public function toggleLike(int $itemId, ListItemService $items): void
@@ -152,10 +199,14 @@ class Show extends Component
 
     public function addPoll(PollService $polls): void
     {
-        $validated = $this->validate(
+        $validated = validator(
+            [
+                'question' => $this->pollQuestion,
+                'options' => $this->pollOptions,
+            ],
             (new StorePollRequest)->rules(),
             (new StorePollRequest)->messages(),
-        );
+        )->validate();
 
         $polls->create(
             $this->user(),
@@ -181,6 +232,12 @@ class Show extends Component
         $polls->vote($this->user(), $this->shoppingList, $pollId, (int) $optionId);
     }
 
+    public function voteOption(int $pollId, int $optionId, PollService $polls): void
+    {
+        $this->selectedOptions[$pollId] = $optionId;
+        $polls->vote($this->user(), $this->shoppingList, $pollId, $optionId);
+    }
+
     public function promoteWinner(int $pollId, PollService $polls): void
     {
         $polls->promoteWinner($this->user(), $this->shoppingList, $pollId);
@@ -198,19 +255,31 @@ class Show extends Component
 
     public function saveAppearance(ShoppingListService $lists): void
     {
+        $this->showEmoji = (bool) $this->showEmoji;
+        $this->showQuantity = (bool) $this->showQuantity;
+        $this->showLikes = (bool) $this->showLikes;
+        $this->showAuthor = (bool) $this->showAuthor;
+
+        if (! $this->backgroundUpload instanceof TemporaryUploadedFile) {
+            $this->backgroundUpload = null;
+        }
+
+        $rules = (new UpdateShoppingListRequest)->rules();
         $validated = $this->validate([
-            'listName' => (new UpdateShoppingListRequest)->rules()['name'],
-            'listEmoji' => (new UpdateShoppingListRequest)->rules()['emoji'],
-            'accentColor' => (new UpdateShoppingListRequest)->rules()['accent_color'],
-            'backgroundPreset' => (new UpdateShoppingListRequest)->rules()['background_preset'],
-            'checkboxStyle' => (new UpdateShoppingListRequest)->rules()['checkbox_style'],
-            'showEmoji' => (new UpdateShoppingListRequest)->rules()['show_emoji'],
-            'showQuantity' => (new UpdateShoppingListRequest)->rules()['show_quantity'],
-            'showLikes' => (new UpdateShoppingListRequest)->rules()['show_likes'],
-            'showAuthor' => (new UpdateShoppingListRequest)->rules()['show_author'],
-            'backgroundUpload' => (new UpdateShoppingListRequest)->rules()['background'],
+            'listName' => $rules['name'],
+            'listEmoji' => $rules['emoji'],
+            'accentColor' => $rules['accent_color'],
+            'backgroundPreset' => $rules['background_preset'],
+            'checkboxStyle' => $rules['checkbox_style'],
+            'showEmoji' => $rules['show_emoji'],
+            'showQuantity' => $rules['show_quantity'],
+            'showLikes' => $rules['show_likes'],
+            'showAuthor' => $rules['show_author'],
+            'backgroundUpload' => $rules['background'],
         ], [
             'listName.required' => 'სიის სახელი სავალდებულოა.',
+            'accentColor.in' => 'აირჩიეთ ფერი.',
+            'backgroundPreset.in' => 'აირჩიეთ ფონი.',
             'backgroundUpload.image' => 'ფონი უნდა იყოს სურათი.',
             'backgroundUpload.max' => 'ფონი არ უნდა აღემატებოდეს 2 მბ-ს.',
         ]);
@@ -227,13 +296,27 @@ class Show extends Component
             'show_author' => $validated['showAuthor'],
         ], $this->backgroundUpload);
 
-        $this->backgroundUpload = null;
+        $this->reset('backgroundUpload');
         $this->panel = '';
     }
 
     public function removeBackground(ShoppingListService $lists): void
     {
         $lists->removeBackground($this->user(), $this->shoppingList);
+        $this->reset('backgroundUpload');
+    }
+
+    public function pendingBackgroundUrl(): ?string
+    {
+        if (! $this->backgroundUpload instanceof TemporaryUploadedFile) {
+            return null;
+        }
+
+        try {
+            return $this->backgroundUpload->temporaryUrl();
+        } catch (FileNotPreviewableException) {
+            return null;
+        }
     }
 
     public function deleteList(ShoppingListService $lists): void
@@ -260,6 +343,12 @@ class Show extends Component
         $this->shoppingList = $list;
         $role = $access->role($this->user(), $list);
 
+        $visible = $this->onlyMine
+            ? $list->items->where('claimed_by', $this->user()->id)->values()
+            : $list->items;
+
+        $sort = fn ($item): string => ($item->is_checked ? '1' : '0').($item->is_pinned ? '0' : '1').$item->name;
+
         return view('livewire.lists.show', [
             'list' => $list,
             'role' => $role,
@@ -269,13 +358,166 @@ class Show extends Component
             'presets' => ListAppearance::PRESETS,
             'accents' => ListAppearance::ACCENTS,
             'emojiChoices' => ListAppearance::EMOJI,
+            'units' => ListAppearance::UNITS,
             'checkboxStyles' => CheckboxStyle::cases(),
             'viewLink' => $list->shareLinks->firstWhere('role', ListRole::Viewer),
             'editLink' => $list->shareLinks->firstWhere('role', ListRole::Editor),
-            'openItems' => $list->items->where('is_checked', false)->sortByDesc('is_pinned')->values(),
-            'checkedItems' => $list->items->where('is_checked', true)->values(),
+            'openCount' => $list->items->where('is_checked', false)->count(),
+            'pickedCount' => $list->items->where('is_checked', true)->count(),
+            'looseItems' => $visible->filter(fn ($item) => blank($item->group_name))->sortBy($sort)->values(),
+            'dishes' => $visible->filter(fn ($item) => filled($item->group_name))->groupBy('group_name')->map(fn ($items) => $items->sortBy($sort)->values()),
             'polls' => $list->polls->sortByDesc('is_pinned')->values(),
+            'activity' => $this->activityFor($list),
         ]);
+    }
+
+    /**
+     * @return array{name: string, quantity: ?string, emoji: ?string, note: ?string, group_name: ?string}
+     */
+    private function preparedItem(): array
+    {
+        $validated = $this->validateItem();
+        $validated['quantity'] = $this->composedQuantity();
+        $validated['group_name'] = $this->resolvedGroup();
+
+        return $validated;
+    }
+
+    private function resolvedGroup(): ?string
+    {
+        if ($this->panel === 'item') {
+            $group = trim($this->itemGroup);
+
+            if (mb_strlen($group) > 120) {
+                throw ValidationException::withMessages([
+                    'itemGroup' => 'კერძის სახელი ძალიან გრძელია.',
+                ]);
+            }
+
+            return $group === '' ? null : $group;
+        }
+
+        if ($this->compose !== 'dish') {
+            return null;
+        }
+
+        $group = trim($this->itemGroup !== '' ? $this->itemGroup : $this->dishName);
+
+        if ($group === '') {
+            throw ValidationException::withMessages([
+                'dishName' => 'კერძის სახელი სავალდებულოა.',
+            ]);
+        }
+
+        if (mb_strlen($group) > 120) {
+            throw ValidationException::withMessages([
+                'dishName' => 'კერძის სახელი ძალიან გრძელია.',
+            ]);
+        }
+
+        return $group;
+    }
+
+    private function composedQuantity(): ?string
+    {
+        $quantity = trim($this->itemQuantity);
+
+        if ($quantity === '') {
+            return null;
+        }
+
+        $unit = array_key_exists($this->itemUnit, ListAppearance::UNITS) ? $this->itemUnit : 'ცალი';
+
+        return $quantity.' '.$unit;
+    }
+
+    private function splitQuantity(?string $quantity): void
+    {
+        $quantity = trim((string) $quantity);
+        $units = array_keys(ListAppearance::UNITS);
+        usort($units, fn (string $a, string $b): int => mb_strlen($b) <=> mb_strlen($a));
+
+        foreach ($units as $unit) {
+            $suffix = ' '.$unit;
+
+            if (str_ends_with($quantity, $suffix)) {
+                $this->itemUnit = $unit;
+                $this->itemQuantity = trim(mb_substr($quantity, 0, mb_strlen($quantity) - mb_strlen($suffix)));
+
+                return;
+            }
+        }
+
+        $this->itemUnit = 'ცალი';
+        $this->itemQuantity = $quantity;
+    }
+
+    /**
+     * @return Collection<int, array{at: mixed, name: string, initials: string, text: string, seed: string}>
+     */
+    private function activityFor(ShoppingList $list): Collection
+    {
+        $events = collect();
+
+        foreach ($list->items as $item) {
+            if ($item->author) {
+                $events->push([
+                    'at' => $item->created_at,
+                    'name' => $item->author->name,
+                    'initials' => $item->author->initials(),
+                    'seed' => (string) $item->author->id,
+                    'text' => 'დაამატა '.$item->name,
+                ]);
+            }
+
+            if ($item->claimer) {
+                $events->push([
+                    'at' => $item->updated_at,
+                    'name' => $item->claimer->name,
+                    'initials' => $item->claimer->initials(),
+                    'seed' => (string) $item->claimer->id,
+                    'text' => 'იღებს '.$item->name,
+                ]);
+            }
+
+            if ($item->is_checked && $item->checker) {
+                $events->push([
+                    'at' => $item->checked_at ?? $item->updated_at,
+                    'name' => $item->checker->name,
+                    'initials' => $item->checker->initials(),
+                    'seed' => (string) $item->checker->id,
+                    'text' => 'მონიშნა '.$item->name,
+                ]);
+            }
+        }
+
+        foreach ($list->polls as $poll) {
+            if ($poll->author) {
+                $events->push([
+                    'at' => $poll->created_at,
+                    'name' => $poll->author->name,
+                    'initials' => $poll->author->initials(),
+                    'seed' => (string) $poll->author->id,
+                    'text' => 'გამოკითხვა: '.$poll->question,
+                ]);
+            }
+
+            foreach ($poll->votes as $vote) {
+                if (! $vote->user) {
+                    continue;
+                }
+
+                $events->push([
+                    'at' => $vote->created_at,
+                    'name' => $vote->user->name,
+                    'initials' => $vote->user->initials(),
+                    'seed' => (string) $vote->user->id,
+                    'text' => 'ხმა მისცა: '.$poll->question,
+                ]);
+            }
+        }
+
+        return $events->sortByDesc(fn (array $event) => $event['at']?->getTimestamp() ?? 0)->values();
     }
 
     /**
@@ -289,7 +531,7 @@ class Show extends Component
                 'quantity' => $this->itemQuantity,
                 'emoji' => $this->itemEmoji,
                 'note' => $this->itemNote,
-                'photo' => $this->itemPhoto,
+                'photo' => $this->itemPhoto instanceof TemporaryUploadedFile ? $this->itemPhoto : null,
             ],
             (new StoreListItemRequest)->rules(),
             (new StoreListItemRequest)->messages(),
@@ -302,8 +544,12 @@ class Show extends Component
     {
         $this->listName = $list->name;
         $this->listEmoji = (string) $list->emoji;
-        $this->accentColor = $list->accent_color;
-        $this->backgroundPreset = $list->background_preset;
+        $this->accentColor = in_array($list->accent_color, ListAppearance::ACCENTS, true)
+            ? $list->accent_color
+            : ListAppearance::ACCENTS[0];
+        $this->backgroundPreset = array_key_exists($list->background_preset, ListAppearance::PRESETS)
+            ? $list->background_preset
+            : 'sage';
         $this->checkboxStyle = $list->checkbox_style->value;
         $this->showEmoji = $list->show_emoji;
         $this->showQuantity = $list->show_quantity;
@@ -313,7 +559,9 @@ class Show extends Component
 
     private function resetItemForm(): void
     {
-        $this->reset('itemName', 'itemQuantity', 'itemEmoji', 'itemNote', 'itemPhoto', 'editingItemId');
+        $this->reset('itemName', 'itemQuantity', 'itemEmoji', 'itemNote', 'itemPhoto', 'editingItemId', 'itemGroup', 'dishName');
+        $this->itemUnit = 'ცალი';
+        $this->compose = 'item';
     }
 
     private function user(): User

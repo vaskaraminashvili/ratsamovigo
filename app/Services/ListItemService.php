@@ -7,7 +7,6 @@ use App\Models\ShoppingList;
 use App\Models\User;
 use App\Repositories\Contracts\ListItemRepository;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class ListItemService
@@ -19,29 +18,37 @@ class ListItemService
     ) {}
 
     /**
-     * @param  array{name: string, quantity?: string|null, emoji?: string|null, note?: string|null}  $data
+     * @param  array{name: string, quantity?: string|null, emoji?: string|null, note?: string|null, group_name?: string|null}  $data
      */
     public function add(User $user, ShoppingList $list, array $data, ?UploadedFile $photo = null): ListItem
     {
         $this->access->requireEdit($user, $list);
+        $this->guardPhoto($list, $photo);
 
-        return $this->items->create([
+        $item = $this->items->create([
             'shopping_list_id' => $list->id,
             'user_id' => $user->id,
             'name' => $data['name'],
+            'group_name' => $this->blankToNull($data['group_name'] ?? null),
             'quantity' => $this->blankToNull($data['quantity'] ?? null),
             'emoji' => $this->blankToNull($data['emoji'] ?? null),
             'note' => $this->blankToNull($data['note'] ?? null),
-            'photo_path' => $this->storePhoto($list, $photo),
         ]);
+
+        if ($photo) {
+            $this->items->replacePhoto($item, $photo);
+        }
+
+        return $item;
     }
 
     /**
-     * @param  array{name: string, quantity?: string|null, emoji?: string|null, note?: string|null}  $data
+     * @param  array{name: string, quantity?: string|null, emoji?: string|null, note?: string|null, group_name?: string|null}  $data
      */
     public function update(User $user, ShoppingList $list, int $itemId, array $data, ?UploadedFile $photo = null): ListItem
     {
         $this->access->requireEdit($user, $list);
+        $this->guardPhoto($list, $photo);
 
         $item = $this->items->findForList($itemId, $list);
         $attributes = [
@@ -51,28 +58,24 @@ class ListItemService
             'note' => $this->blankToNull($data['note'] ?? null),
         ];
 
-        if ($photo) {
-            if ($item->photo_path) {
-                Storage::disk('public')->delete($item->photo_path);
-            }
-
-            $attributes['photo_path'] = $this->storePhoto($list, $photo);
+        if (array_key_exists('group_name', $data)) {
+            $attributes['group_name'] = $this->blankToNull($data['group_name']);
         }
 
-        return $this->items->update($item, $attributes);
+        $item = $this->items->update($item, $attributes);
+
+        if ($photo) {
+            $this->items->replacePhoto($item, $photo);
+        }
+
+        return $item;
     }
 
     public function delete(User $user, ShoppingList $list, int $itemId): void
     {
         $this->access->requireEdit($user, $list);
 
-        $item = $this->items->findForList($itemId, $list);
-
-        if ($item->photo_path) {
-            Storage::disk('public')->delete($item->photo_path);
-        }
-
-        $this->items->delete($item);
+        $this->items->delete($this->items->findForList($itemId, $list));
     }
 
     public function toggleCheck(User $user, ShoppingList $list, int $itemId): void
@@ -127,10 +130,31 @@ class ListItemService
         $this->items->clearChecked($list);
     }
 
-    private function storePhoto(ShoppingList $list, ?UploadedFile $photo): ?string
+    public function toggleGroup(User $user, ShoppingList $list, string $groupName): void
+    {
+        $this->access->requireEdit($user, $list);
+
+        $group = $this->items->inGroup($list, $groupName);
+
+        if ($group->isEmpty()) {
+            return;
+        }
+
+        $check = $group->contains(fn (ListItem $item): bool => ! $item->is_checked);
+
+        foreach ($group as $item) {
+            $this->items->update($item, [
+                'is_checked' => $check,
+                'checked_by' => $check ? $user->id : null,
+                'checked_at' => $check ? now() : null,
+            ]);
+        }
+    }
+
+    private function guardPhoto(ShoppingList $list, ?UploadedFile $photo): void
     {
         if (! $photo) {
-            return null;
+            return;
         }
 
         $owner = $list->relationLoaded('owner') ? $list->owner : $list->owner()->first();
@@ -140,8 +164,6 @@ class ListItemService
                 'photo' => 'ფოტო ფასიან გეგმაზეა.',
             ]);
         }
-
-        return $photo->store('items', 'public');
     }
 
     private function blankToNull(?string $value): ?string

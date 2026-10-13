@@ -9,6 +9,8 @@ use App\Services\PollService;
 use App\Services\ShareLinkService;
 use App\Services\ShoppingListService;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
 
@@ -90,6 +92,84 @@ it('stops a third list when the free plan is enforced', function () {
 
     expect(fn () => $lists->create($user, ['name' => 'სამი']))
         ->toThrow(ValidationException::class);
+});
+
+it('adds a poll from the list screen', function () {
+    $user = User::factory()->create();
+    $list = app(ShoppingListService::class)->create($user, ['name' => 'სასმელი']);
+
+    $this->actingAs($user);
+
+    Livewire::test(Show::class, ['shoppingList' => $list])
+        ->set('pollQuestion', 'რა ვიყიდოთ?')
+        ->set('pollOptions', "კოლა\nფანტა")
+        ->call('addPoll')
+        ->assertHasNoErrors()
+        ->assertSee('რა ვიყიდოთ?');
+
+    expect($list->polls()->count())->toBe(1);
+});
+
+it('saves appearance and stores the background with media library', function () {
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    $list = app(ShoppingListService::class)->create($user, ['name' => 'სასურსათო']);
+
+    $this->actingAs($user);
+
+    Livewire::test(Show::class, ['shoppingList' => $list])
+        ->set('listName', 'საღამო')
+        ->set('listEmoji', '🍷')
+        ->set('showEmoji', false)
+        ->set('showAuthor', false)
+        ->set('backgroundUpload', UploadedFile::fake()->image('kitchen.jpg'))
+        ->call('saveAppearance')
+        ->assertHasNoErrors()
+        ->assertSet('panel', '');
+
+    $fresh = $list->fresh();
+
+    expect($fresh->name)->toBe('საღამო')
+        ->and($fresh->emoji)->toBe('🍷')
+        ->and($fresh->show_emoji)->toBeFalse()
+        ->and($fresh->show_author)->toBeFalse()
+        ->and($fresh->getFirstMedia('background'))->not->toBeNull()
+        ->and($fresh->backgroundUrl())->toStartWith('/storage/');
+});
+
+it('removes a stored background', function () {
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    $list = app(ShoppingListService::class)->create($user, ['name' => 'სასურსათო']);
+
+    $this->actingAs($user);
+
+    Livewire::test(Show::class, ['shoppingList' => $list])
+        ->set('backgroundUpload', UploadedFile::fake()->image('kitchen.jpg'))
+        ->call('saveAppearance')
+        ->call('removeBackground')
+        ->assertHasNoErrors();
+
+    expect($list->fresh()->getFirstMedia('background'))->toBeNull();
+});
+
+it('stores an item photo with the media library', function () {
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    $list = app(ShoppingListService::class)->create($user, ['name' => 'სასურსათო']);
+
+    $this->actingAs($user);
+
+    Livewire::test(Show::class, ['shoppingList' => $list])
+        ->set('itemName', 'პური')
+        ->set('itemPhoto', UploadedFile::fake()->image('bread.jpg'))
+        ->call('addItem')
+        ->assertHasNoErrors();
+
+    expect($list->items()->first()->getFirstMedia('photo'))->not->toBeNull();
 });
 
 it('shows the list screen to the owner', function () {

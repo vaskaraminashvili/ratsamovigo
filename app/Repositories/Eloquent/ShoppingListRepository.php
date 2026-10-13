@@ -9,6 +9,7 @@ use App\Models\ShoppingList;
 use App\Models\User;
 use App\Repositories\Contracts\ShoppingListRepository as ShoppingListRepositoryContract;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
@@ -18,6 +19,7 @@ class ShoppingListRepository implements ShoppingListRepositoryContract
     {
         return ShoppingList::query()
             ->whereHas('members', fn (Builder $query) => $query->where('user_id', $user->id))
+            ->with(['members.user'])
             ->withCount([
                 'items as open_items_count' => fn (Builder $query) => $query->where('is_checked', false),
             ])
@@ -52,8 +54,25 @@ class ShoppingListRepository implements ShoppingListRepositoryContract
         return $list->refresh();
     }
 
+    public function replaceBackground(ShoppingList $list, UploadedFile $file): void
+    {
+        $this->replaceMedia($list, $file, 'background');
+    }
+
+    public function clearBackground(ShoppingList $list): void
+    {
+        $list->clearMediaCollection('background');
+    }
+
     public function delete(ShoppingList $list): void
     {
+        $list->loadMissing('items');
+
+        foreach ($list->items as $item) {
+            $item->clearMediaCollection('photo');
+        }
+
+        $list->clearMediaCollection('background');
         $list->delete();
     }
 
@@ -118,6 +137,13 @@ class ShoppingListRepository implements ShoppingListRepositoryContract
             ->first();
     }
 
+    private function replaceMedia(ShoppingList $list, UploadedFile $file, string $collection): void
+    {
+        $list->addMedia($file->getRealPath() ?: $file)
+            ->usingFileName((string) Str::uuid().'.'.($file->guessExtension() ?: 'jpg'))
+            ->toMediaCollection($collection);
+    }
+
     /**
      * @return Builder<ShoppingList>
      */
@@ -125,15 +151,17 @@ class ShoppingListRepository implements ShoppingListRepositoryContract
     {
         return ShoppingList::query()->with([
             'owner',
+            'media',
             'members.user',
             'shareLinks',
+            'items.media',
             'items.author',
             'items.checker',
             'items.claimer',
             'items.likes',
             'polls.author',
-            'polls.options.votes',
-            'polls.votes',
+            'polls.options.votes.user',
+            'polls.votes.user',
         ]);
     }
 }

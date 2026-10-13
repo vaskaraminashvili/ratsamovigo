@@ -8,6 +8,9 @@ use App\Models\Poll;
 use App\Models\ShoppingList;
 use App\Models\User;
 use App\Repositories\Contracts\ListItemRepository as ListItemRepositoryContract;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class ListItemRepository implements ListItemRepositoryContract
 {
@@ -16,6 +19,14 @@ class ListItemRepository implements ListItemRepositoryContract
         return ListItem::query()
             ->where('shopping_list_id', $list->id)
             ->findOrFail($id);
+    }
+
+    public function inGroup(ShoppingList $list, string $groupName): Collection
+    {
+        return ListItem::query()
+            ->where('shopping_list_id', $list->id)
+            ->where('group_name', $groupName)
+            ->get();
     }
 
     public function create(array $attributes): ListItem
@@ -30,8 +41,16 @@ class ListItemRepository implements ListItemRepositoryContract
         return $item->refresh();
     }
 
+    public function replacePhoto(ListItem $item, UploadedFile $file): void
+    {
+        $item->addMedia($file->getRealPath() ?: $file)
+            ->usingFileName((string) Str::uuid().'.'.($file->guessExtension() ?: 'jpg'))
+            ->toMediaCollection('photo');
+    }
+
     public function delete(ListItem $item): void
     {
+        $item->clearMediaCollection('photo');
         $item->delete();
     }
 
@@ -40,7 +59,11 @@ class ListItemRepository implements ListItemRepositoryContract
         ListItem::query()
             ->where('shopping_list_id', $list->id)
             ->where('is_checked', true)
-            ->delete();
+            ->get()
+            ->each(function (ListItem $item): void {
+                $item->clearMediaCollection('photo');
+                $item->delete();
+            });
     }
 
     public function unpinAll(ShoppingList $list): void

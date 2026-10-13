@@ -5,10 +5,17 @@ namespace App\Repositories\Contracts;
 use App\Models\ListItem;
 use App\Models\ShoppingList;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Collection;
 
 interface ListItemRepository
 {
     public function findForList(int $id, ShoppingList $list): ListItem;
+
+    /**
+     * @return Collection<int, ListItem>
+     */
+    public function inGroup(ShoppingList $list, string $groupName): Collection;
 
     /**
      * @param  array<string, mixed>  $attributes
@@ -19,6 +26,8 @@ interface ListItemRepository
      * @param  array<string, mixed>  $attributes
      */
     public function update(ListItem $item, array $attributes): ListItem;
+
+    public function replacePhoto(ListItem $item, UploadedFile $file): void;
 
     public function delete(ListItem $item): void;
 

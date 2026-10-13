@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="ka">
     <head>
         @include('partials.head')
     </head>
-    <body class="slip-ui min-h-dvh bg-crate font-slip text-ink antialiased">
+    <body class="slip-ui min-h-dvh bg-floor font-slip text-ink antialiased">
         {{ $slot }}
 
         @persist('toast')

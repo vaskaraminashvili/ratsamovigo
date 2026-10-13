@@ -19,6 +19,8 @@ class ListAppearance
      * @var list<string>
      */
     public const ACCENTS = [
+        '#7b5cf6',
+        '#7a3ff2',
         '#c43122',
         '#059669',
         '#d97706',
@@ -34,10 +36,42 @@ class ListAppearance
     public const EMOJI = ['🥛', '🍞', '🥚', '🧀', '🍎', '🥕', '🍗', '🧼', '💊', '🧴'];
 
     /**
+     * @var array<string, string>
+     */
+    public const UNITS = [
+        'ცალი' => 'ცალი',
+        'გ' => 'გრამი',
+        'კგ' => 'კილოგრამი',
+        'მლ' => 'მილილიტრი',
+        'ლ' => 'ლიტრი',
+        'შეკვრა' => 'შეკვრა',
+        'კონა' => 'კონა',
+    ];
+
+    /**
+     * @var list<array{bg: string, ink: string}>
+     */
+    public const TINTS = [
+        ['bg' => '#ffd9cf', 'ink' => '#c4533a'],
+        ['bg' => '#ffd6ea', 'ink' => '#c43b78'],
+        ['bg' => '#e4dcff', 'ink' => '#5b3fd4'],
+        ['bg' => '#e7f7b8', 'ink' => '#4d7a12'],
+        ['bg' => '#d9f0ff', 'ink' => '#1d6f9a'],
+    ];
+
+    /**
      * @return array{label: string, class: string}
      */
     public static function preset(string $key): array
     {
         return self::PRESETS[$key] ?? self::PRESETS['sage'];
+    }
+
+    /**
+     * @return array{bg: string, ink: string}
+     */
+    public static function tint(string $seed): array
+    {
+        return self::TINTS[abs(crc32($seed)) % count(self::TINTS)];
     }
 }

@@ -10,7 +10,6 @@ use App\Repositories\Contracts\ShoppingListRepository;
 use App\Support\ListAppearance;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class ShoppingListService
@@ -49,7 +48,8 @@ class ShoppingListService
             'user_id' => $user->id,
             'name' => $data['name'],
             'emoji' => $this->blankToNull($data['emoji'] ?? null),
-            'accent_color' => '#c43122',
+            'accent_color' => ListAppearance::ACCENTS[0],
+            'checkbox_style' => CheckboxStyle::Circle,
         ]);
 
         $this->lists->addMember($list, $user, ListRole::Owner);
@@ -72,6 +72,16 @@ class ShoppingListService
             ]);
         }
 
+        if ($background) {
+            $owner = $list->owner ?? $list->owner()->first();
+
+            if (! $owner || ! $this->entitlements->canUploadBackground($owner)) {
+                throw ValidationException::withMessages([
+                    'backgroundUpload' => 'საკუთარი ფონი ფასიან გეგმაზეა.',
+                ]);
+            }
+        }
+
         $attributes = [
             'name' => $data['name'],
             'emoji' => $this->blankToNull($data['emoji'] ?? null),
@@ -84,44 +94,24 @@ class ShoppingListService
             'show_author' => (bool) $data['show_author'],
         ];
 
+        $updated = $this->lists->update($list, $attributes);
+
         if ($background) {
-            $owner = $list->owner ?? $list->owner()->first();
-
-            if (! $owner || ! $this->entitlements->canUploadBackground($owner)) {
-                throw ValidationException::withMessages([
-                    'background' => 'საკუთარი ფონი ფასიან გეგმაზეა.',
-                ]);
-            }
-
-            if ($list->background_path) {
-                Storage::disk('public')->delete($list->background_path);
-            }
-
-            $attributes['background_path'] = $background->store('backgrounds', 'public');
+            $this->lists->replaceBackground($updated, $background);
         }
 
-        return $this->lists->update($list, $attributes);
+        return $updated;
     }
 
     public function removeBackground(User $user, ShoppingList $list): void
     {
         $this->access->requireManage($user, $list);
-
-        if ($list->background_path) {
-            Storage::disk('public')->delete($list->background_path);
-        }
-
-        $this->lists->update($list, ['background_path' => null]);
+        $this->lists->clearBackground($list);
     }
 
     public function delete(User $user, ShoppingList $list): void
     {
         $this->access->requireManage($user, $list);
-
-        if ($list->background_path) {
-            Storage::disk('public')->delete($list->background_path);
-        }
-
         $this->lists->delete($list);
     }
 

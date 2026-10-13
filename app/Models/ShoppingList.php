@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
 /**
  * @property int $id
@@ -17,7 +19,6 @@ use Illuminate\Support\Carbon;
  * @property string|null $emoji
  * @property string $accent_color
  * @property string $background_preset
- * @property string|null $background_path
  * @property CheckboxStyle $checkbox_style
  * @property bool $show_emoji
  * @property bool $show_quantity
@@ -33,16 +34,44 @@ use Illuminate\Support\Carbon;
     'emoji',
     'accent_color',
     'background_preset',
-    'background_path',
     'checkbox_style',
     'show_emoji',
     'show_quantity',
     'show_likes',
     'show_author',
 ])]
-class ShoppingList extends Model
+class ShoppingList extends Model implements HasMedia
 {
+    use InteractsWithMedia;
     use SoftDeletes;
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('background')->singleFile();
+    }
+
+    public function backgroundUrl(): ?string
+    {
+        return $this->sameOriginMediaUrl('background');
+    }
+
+    private function sameOriginMediaUrl(string $collection): ?string
+    {
+        $url = $this->getFirstMediaUrl($collection);
+
+        if ($url === '') {
+            return null;
+        }
+
+        $path = parse_url($url, PHP_URL_PATH);
+        $query = parse_url($url, PHP_URL_QUERY);
+
+        if (! is_string($path) || $path === '') {
+            return $url;
+        }
+
+        return $query ? $path.'?'.$query : $path;
+    }
 
     /**
      * @return array<string, string>

@@ -1,61 +1,73 @@
-<article class="border-b border-rule px-4 py-3 text-ink last:border-b-0">
-    <div class="flex items-start gap-3">
-        @if ($canEdit)
-            <button
-                type="button"
-                wire:click="toggleCheck({{ $item->id }})"
-                aria-label="{{ $item->is_checked ? 'მონიშვნის მოხსნა' : 'მონიშვნა' }}"
-                class="mt-0.5 flex size-11 shrink-0 items-center justify-center border-ink text-lg text-ink {{ $list->checkbox_style->value === 'circle' ? 'rounded-full border-2' : ($list->checkbox_style->value === 'plain' ? 'border-0' : 'border-2') }}"
-            >
-                <span class="slip-mark {{ $item->is_checked ? 'opacity-100' : 'opacity-0' }}" aria-hidden="true">✓</span>
-            </button>
-        @endif
-        <div class="min-w-0 flex-1">
-            <div class="flex items-baseline gap-3">
-                <p @class(['min-w-0 flex-1 text-base font-medium', 'text-bought line-through' => $checked])>
-                    @if ($list->show_emoji && $item->emoji)
-                        <span>{{ $item->emoji }}</span>
-                    @endif
-                    {{ $item->name }}
-                </p>
-                @if ($list->show_quantity && $item->quantity)
-                    <p class="shrink-0 text-sm text-bought">{{ $item->quantity }}</p>
+@php
+    $checked = $item->is_checked;
+    $shape = match ($list->checkbox_style->value) {
+        'box' => 'rounded-[7px]',
+        'plain' => 'border-transparent',
+        default => 'rounded-full',
+    };
+    $filled = $checked && $list->checkbox_style->value !== 'plain';
+    $tint = $item->claimer ? \App\Support\ListAppearance::tint((string) $item->claimer->id) : null;
+    $itemPhoto = $item->photoUrl();
+@endphp
+
+<div class="flex items-center gap-3 py-2">
+    @if ($canEdit)
+        <button
+            type="button"
+            wire:click="toggleCheck({{ $item->id }})"
+            aria-label="{{ $checked ? 'მონიშვნის მოხსნა' : 'მონიშვნა' }}"
+            @class(['slip-box flex size-6 shrink-0 items-center justify-center border-2 text-white', $shape, 'border-[#d9d4e6] bg-white' => ! $filled])
+            @if ($filled) style="background: {{ $list->accent_color }}; border-color: {{ $list->accent_color }}" @endif
+        >
+            @if ($checked)
+                <svg viewBox="0 0 16 16" class="size-3.5" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M3.5 8.2 6.4 11 12.5 4.8"></path></svg>
+            @endif
+        </button>
+    @endif
+
+    @if ($itemPhoto)
+        <img src="{{ $itemPhoto }}" alt="" class="size-9 shrink-0 rounded-full object-cover">
+    @endif
+
+    @if ($canEdit)
+        <button type="button" wire:click="editItem({{ $item->id }})" class="min-w-0 flex-1 text-left">
+            <span @class(['block truncate text-[15px] font-medium', 'text-bought line-through' => $checked])>
+                @if ($list->show_emoji && $item->emoji)
+                    <span class="mr-1">{{ $item->emoji }}</span>
                 @endif
-            </div>
-            @if ($item->note)
-                <p class="mt-1 text-sm text-bought">{{ $item->note }}</p>
+                {{ $item->name }}
+            </span>
+            @if ($list->show_quantity && $item->quantity)
+                <span class="mt-0.5 block text-sm text-bought">{{ $item->quantity }}</span>
             @endif
-            @if ($item->photo_path)
-                <img src="{{ \Illuminate\Support\Facades\Storage::url($item->photo_path) }}" alt="" class="mt-2 h-24 w-full object-cover">
-            @endif
-            @if ($list->show_author || ($item->is_checked && $item->checker) || $item->claimer)
-                <p class="mt-1 text-sm leading-relaxed text-bought">
-                    @if ($list->show_author)
-                        დაამატა {{ $item->author->name }}.
-                    @endif
-                    @if ($item->is_checked && $item->checker)
-                        მონიშნა {{ $item->checker->name }}.
-                    @endif
-                    @if ($item->claimer)
-                        ყიდულობს {{ $item->claimer->name }}.
-                    @endif
-                </p>
+        </button>
+    @else
+        <div class="min-w-0 flex-1">
+            <p @class(['truncate text-[15px] font-medium', 'text-bought line-through' => $checked])>
+                @if ($list->show_emoji && $item->emoji)
+                    <span class="mr-1">{{ $item->emoji }}</span>
+                @endif
+                {{ $item->name }}
+            </p>
+            @if ($list->show_quantity && $item->quantity)
+                <p class="mt-0.5 text-sm text-bought">{{ $item->quantity }}</p>
             @endif
         </div>
-    </div>
-    <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-        @if ($list->show_likes)
-            <button type="button" wire:click="toggleLike({{ $item->id }})" class="h-10">
-                {{ $item->likes->contains('user_id', auth()->id()) ? '♥' : '♡' }} {{ $item->likes->count() }}
+    @endif
+
+    @if ($item->claimer && $tint)
+        @if ($canEdit && $item->claimed_by === auth()->id())
+            <button type="button" wire:click="toggleClaim({{ $item->id }})" class="flex h-8 max-w-[9.5rem] shrink-0 items-center gap-1.5 rounded-full px-1.5 pr-3 text-sm font-medium" style="background: {{ $tint['bg'] }}; color: {{ $tint['ink'] }}" aria-label="აღარ ვიყიდი">
+                <span class="flex size-6 items-center justify-center rounded-full bg-white/70 text-[11px]">{{ $item->claimer->initials() }}</span>
+                <span class="truncate">{{ $item->claimer->name }}</span>
             </button>
+        @else
+            <span class="flex h-8 max-w-[9.5rem] shrink-0 items-center gap-1.5 rounded-full px-1.5 pr-3 text-sm font-medium" style="background: {{ $tint['bg'] }}; color: {{ $tint['ink'] }}">
+                <span class="flex size-6 items-center justify-center rounded-full bg-white/70 text-[11px]">{{ $item->claimer->initials() }}</span>
+                <span class="truncate">{{ $item->claimer->name }}</span>
+            </span>
         @endif
-        @if ($canEdit)
-            <button type="button" wire:click="toggleClaim({{ $item->id }})" class="h-10">
-                {{ $item->claimed_by === auth()->id() ? 'ვიყიდი მე' : 'მე ვიყიდი' }}
-            </button>
-            <button type="button" wire:click="togglePin({{ $item->id }})" class="h-10">{{ $item->is_pinned ? 'ჩამაგრებულია' : 'ზევით' }}</button>
-            <button type="button" wire:click="editItem({{ $item->id }})" class="h-10">შესწორება</button>
-            <button type="button" wire:click="deleteItem({{ $item->id }})" class="h-10 text-wine">წაშლა</button>
-        @endif
-    </div>
-</article>
+    @elseif ($canEdit)
+        <button type="button" wire:click="toggleClaim({{ $item->id }})" class="h-8 shrink-0 rounded-full border border-[#e4deef] bg-white px-3 text-sm text-bought">ვიყიდი</button>
+    @endif
+</div>
