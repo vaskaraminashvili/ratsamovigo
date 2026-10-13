@@ -1,5 +1,5 @@
 <x-layouts::auth :title="__('Forgot password')">
-    <div class="flex flex-col gap-6">
+    <div class="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-5 py-8">
         <x-auth-header :title="__('Forgot password')" :description="__('Enter your email to receive a password reset link')" />
 
         <!-- Session Status -->

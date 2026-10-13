@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\UserPlan;
 use Database\Factories\UserFactory;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -15,6 +16,7 @@ use Illuminate\Support\Str;
 use Laravel\Fortify\Contracts\PasskeyUser;
 use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 
 /**
  * @property int $id
@@ -49,6 +51,20 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
             'password' => 'hashed',
             'plan' => UserPlan::class,
         ];
+    }
+
+    /**
+     * Send the email verification notification.
+     *
+     * A dead mail server must not turn registration into a 500.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        try {
+            $this->notify(new VerifyEmail);
+        } catch (TransportExceptionInterface $exception) {
+            report($exception);
+        }
     }
 
     /**

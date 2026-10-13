@@ -42,6 +42,14 @@ class ShoppingListRepository implements ShoppingListRepositoryContract
         return $this->detailedQuery()->findOrFail($link->shopping_list_id);
     }
 
+    public function findShareLink(string $token): ShareLink
+    {
+        return ShareLink::query()
+            ->with('list')
+            ->where('token', $token)
+            ->firstOrFail();
+    }
+
     public function create(array $attributes): ShoppingList
     {
         return ShoppingList::query()->create($attributes);

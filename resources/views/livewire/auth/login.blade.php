@@ -1,59 +1,81 @@
-<x-layouts::auth :title="__('Log in')">
-    <div class="flex flex-col gap-6">
-        <x-auth-header :title="__('Log in to your account')" :description="__('Enter your email and password below to log in')" />
+<x-layouts::auth title="შესვლა">
+    <header class="relative shrink-0 overflow-hidden rounded-b-[36px] bg-marker px-5 pb-8 pt-8 text-white">
+        <span class="pointer-events-none absolute -right-10 -top-12 size-44 rounded-full bg-lime/90" aria-hidden="true"></span>
+        <span class="pointer-events-none absolute -bottom-10 -left-8 size-32 rounded-full bg-coral" aria-hidden="true"></span>
+        <span class="pointer-events-none absolute right-24 top-16 size-16 rounded-full bg-white/15" aria-hidden="true"></span>
 
-        <!-- Session Status -->
-        <x-auth-session-status class="text-center" :status="session('status')" />
+        <p class="relative text-sm text-white/85">სია</p>
+        <h1 class="relative mt-1 font-sign text-[2rem] font-bold leading-tight">შესვლა</h1>
+        <p class="relative mt-2 text-sm text-white/90">შედი და განაგრძე შენი სიები</p>
+    </header>
 
-        <x-passkey-verify />
+    <div class="min-h-0 flex-1 overflow-y-auto px-5 py-5">
+        <x-auth-session-status class="mb-4 text-center" :status="session('status')" />
 
-        <form method="POST" action="{{ route('login.store') }}" class="flex flex-col gap-6">
+        <x-passkey-verify
+            label="შესვლა პასკით"
+            loading-label="შემოწმება..."
+            separator="ან ელფოსტით"
+        />
+
+        <form method="POST" action="{{ route('login.store') }}" class="space-y-4">
             @csrf
 
-            <!-- Email Address -->
-            <flux:input
-                name="email"
-                :label="__('Email address')"
-                :value="old('email')"
-                type="email"
-                required
-                autofocus
-                autocomplete="email"
-                placeholder="email@example.com"
-            />
-
-            <!-- Password -->
-            <div class="relative">
-                <flux:input
-                    name="password"
-                    :label="__('Password')"
-                    type="password"
+            <div>
+                <label for="email" class="text-sm font-medium text-marker">ელფოსტა</label>
+                <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value="{{ old('email') }}"
                     required
-                    autocomplete="current-password"
-                    :placeholder="__('Password')"
-                    viewable
-                />
-
-                @if (Route::has('password.request'))
-                    <flux:link class="absolute top-0 text-sm end-0" :href="route('password.request')" wire:navigate>
-                        {{ __('Forgot your password?') }}
-                    </flux:link>
-                @endif
+                    autofocus
+                    autocomplete="email"
+                    placeholder="you@email.com"
+                    class="mt-2 h-12 w-full rounded-2xl bg-white px-4 text-base text-ink outline-none ring-1 ring-transparent focus:ring-2 focus:ring-marker"
+                >
+                @error('email')
+                    <p class="mt-2 text-sm text-wine">{{ $message }}</p>
+                @enderror
             </div>
 
-            <!-- Remember Me -->
-            <flux:checkbox name="remember" :label="__('Remember me')" :checked="old('remember')" />
-
-            <div class="flex items-center justify-end">
-                <flux:button variant="primary" type="submit" class="w-full" data-test="login-button">
-                    {{ __('Log in') }}
-                </flux:button>
+            <div>
+                <div class="flex items-center justify-between gap-3">
+                    <label for="password" class="text-sm font-medium text-marker">პაროლი</label>
+                    @if (Route::has('password.request'))
+                        <a href="{{ route('password.request') }}" class="text-sm text-bought" wire:navigate>დაგავიწყდა?</a>
+                    @endif
+                </div>
+                <div class="mt-2 flex items-center gap-2" x-data="{ show: false }">
+                    <input
+                        id="password"
+                        name="password"
+                        x-bind:type="show ? 'text' : 'password'"
+                        required
+                        autocomplete="current-password"
+                        placeholder="პაროლი"
+                        class="h-12 min-w-0 flex-1 rounded-2xl bg-white px-4 text-base text-ink outline-none ring-1 ring-transparent focus:ring-2 focus:ring-marker"
+                    >
+                    <button type="button" class="shrink-0 text-sm text-bought" x-on:click="show = !show" x-text="show ? 'დამალვა' : 'ჩვენება'"></button>
+                </div>
+                @error('password')
+                    <p class="mt-2 text-sm text-wine">{{ $message }}</p>
+                @enderror
             </div>
+
+            <label class="flex items-center gap-2 text-sm text-ink">
+                <input type="checkbox" name="remember" value="1" @checked(old('remember')) class="size-4 rounded">
+                დამიმახსოვრე
+            </label>
+
+            <button type="submit" class="slip-press h-12 w-full rounded-full bg-ink text-sm font-medium text-white" data-test="login-button">
+                შესვლა
+            </button>
         </form>
 
-        <div class="space-x-1 text-sm text-center rtl:space-x-reverse text-zinc-600 dark:text-zinc-400">
-            <span>{{ __('Don\'t have an account?') }}</span>
-            <flux:link :href="route('register')" wire:navigate>{{ __('Sign up') }}</flux:link>
-        </div>
+        <p class="mt-6 text-center text-sm text-bought">
+            არ გაქვს ანგარიში?
+            <a href="{{ route('register') }}" class="font-medium text-marker" wire:navigate>რეგისტრაცია</a>
+        </p>
     </div>
 </x-layouts::auth>

@@ -21,6 +21,8 @@ interface ShoppingListRepository
 
     public function findByShareToken(string $token): ShoppingList;
 
+    public function findShareLink(string $token): ShareLink;
+
     /**
      * @param  array<string, mixed>  $attributes
      */

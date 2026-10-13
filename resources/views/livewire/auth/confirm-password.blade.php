@@ -1,5 +1,5 @@
 <x-layouts::auth :title="__('Confirm password')">
-    <div class="flex flex-col gap-6">
+    <div class="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-5 py-8">
         <x-auth-header
             :title="__('Confirm password')"
             :description="__('This is a secure area of the application. Please confirm your password before continuing.')"

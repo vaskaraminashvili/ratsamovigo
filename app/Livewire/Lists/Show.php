@@ -15,8 +15,8 @@ use App\Services\ListItemService;
 use App\Services\PollService;
 use App\Services\ShareLinkService;
 use App\Services\ShoppingListService;
+use App\Support\ListActivity;
 use App\Support\ListAppearance;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -326,6 +326,13 @@ class Show extends Component
         $this->redirect(route('lists.index'), navigate: true);
     }
 
+    public function openPeople(ShareLinkService $links): void
+    {
+        $links->ensure($this->user(), $this->shoppingList, ListRole::Viewer);
+        $links->ensure($this->user(), $this->shoppingList, ListRole::Editor);
+        $this->panel = 'share';
+    }
+
     public function share(string $role, ShareLinkService $links): void
     {
         $links->replace($this->user(), $this->shoppingList, ListRole::from($role));
@@ -360,6 +367,7 @@ class Show extends Component
             'emojiChoices' => ListAppearance::EMOJI,
             'units' => ListAppearance::UNITS,
             'checkboxStyles' => CheckboxStyle::cases(),
+            'readonly' => false,
             'viewLink' => $list->shareLinks->firstWhere('role', ListRole::Viewer),
             'editLink' => $list->shareLinks->firstWhere('role', ListRole::Editor),
             'openCount' => $list->items->where('is_checked', false)->count(),
@@ -367,7 +375,7 @@ class Show extends Component
             'looseItems' => $visible->filter(fn ($item) => blank($item->group_name))->sortBy($sort)->values(),
             'dishes' => $visible->filter(fn ($item) => filled($item->group_name))->groupBy('group_name')->map(fn ($items) => $items->sortBy($sort)->values()),
             'polls' => $list->polls->sortByDesc('is_pinned')->values(),
-            'activity' => $this->activityFor($list),
+            'activity' => ListActivity::events($list),
         ]);
     }
 
@@ -450,74 +458,6 @@ class Show extends Component
 
         $this->itemUnit = 'ცალი';
         $this->itemQuantity = $quantity;
-    }
-
-    /**
-     * @return Collection<int, array{at: mixed, name: string, initials: string, text: string, seed: string}>
-     */
-    private function activityFor(ShoppingList $list): Collection
-    {
-        $events = collect();
-
-        foreach ($list->items as $item) {
-            if ($item->author) {
-                $events->push([
-                    'at' => $item->created_at,
-                    'name' => $item->author->name,
-                    'initials' => $item->author->initials(),
-                    'seed' => (string) $item->author->id,
-                    'text' => 'დაამატა '.$item->name,
-                ]);
-            }
-
-            if ($item->claimer) {
-                $events->push([
-                    'at' => $item->updated_at,
-                    'name' => $item->claimer->name,
-                    'initials' => $item->claimer->initials(),
-                    'seed' => (string) $item->claimer->id,
-                    'text' => 'იღებს '.$item->name,
-                ]);
-            }
-
-            if ($item->is_checked && $item->checker) {
-                $events->push([
-                    'at' => $item->checked_at ?? $item->updated_at,
-                    'name' => $item->checker->name,
-                    'initials' => $item->checker->initials(),
-                    'seed' => (string) $item->checker->id,
-                    'text' => 'მონიშნა '.$item->name,
-                ]);
-            }
-        }
-
-        foreach ($list->polls as $poll) {
-            if ($poll->author) {
-                $events->push([
-                    'at' => $poll->created_at,
-                    'name' => $poll->author->name,
-                    'initials' => $poll->author->initials(),
-                    'seed' => (string) $poll->author->id,
-                    'text' => 'გამოკითხვა: '.$poll->question,
-                ]);
-            }
-
-            foreach ($poll->votes as $vote) {
-                if (! $vote->user) {
-                    continue;
-                }
-
-                $events->push([
-                    'at' => $vote->created_at,
-                    'name' => $vote->user->name,
-                    'initials' => $vote->user->initials(),
-                    'seed' => (string) $vote->user->id,
-                    'text' => 'ხმა მისცა: '.$poll->question,
-                ]);
-            }
-        }
-
-        return $events->sortByDesc(fn (array $event) => $event['at']?->getTimestamp() ?? 0)->values();
     }
 
     /**

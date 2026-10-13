@@ -1,4 +1,5 @@
 @php
+    $readonly = $readonly ?? false;
     $photo = $list->backgroundUrl();
     $field = 'h-12 w-full rounded-2xl bg-phone px-3 text-base text-ink outline-none ring-1 ring-transparent focus:ring-2 focus:ring-marker';
     $members = $list->members;
@@ -15,9 +16,13 @@
             @endunless
 
             <div class="relative flex items-center justify-between">
-                <a href="{{ route('lists.index') }}" wire:navigate class="flex size-10 items-center justify-center rounded-full bg-white/20" aria-label="სიები">
-                    <svg viewBox="0 0 24 24" class="size-5" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M15 5 8 12l7 7"></path></svg>
-                </a>
+                @if ($readonly)
+                    <span class="rounded-full bg-white/20 px-3 py-1.5 text-sm">მხოლოდ ნახვა</span>
+                @else
+                    <a href="{{ route('lists.index') }}" wire:navigate class="flex size-10 items-center justify-center rounded-full bg-white/20" aria-label="სიები">
+                        <svg viewBox="0 0 24 24" class="size-5" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M15 5 8 12l7 7"></path></svg>
+                    </a>
+                @endif
                 <div class="flex -space-x-2">
                     @foreach ($members->take(4) as $member)
                         @php $tint = \App\Support\ListAppearance::tint((string) $member->user_id); @endphp
@@ -27,9 +32,13 @@
                         <span class="flex size-8 items-center justify-center rounded-full border-2 border-white/40 bg-white/25 text-[11px]">+{{ $extraMembers }}</span>
                     @endif
                 </div>
-                <button type="button" wire:click="$set('panel', 'menu')" class="flex size-10 items-center justify-center rounded-full bg-white/20" aria-label="მეტი">
-                    <svg viewBox="0 0 24 24" class="size-5" fill="currentColor" aria-hidden="true"><circle cx="6" cy="12" r="1.4"></circle><circle cx="12" cy="12" r="1.4"></circle><circle cx="18" cy="12" r="1.4"></circle></svg>
-                </button>
+                @unless ($readonly)
+                    <button type="button" wire:click="$set('panel', 'menu')" class="flex size-10 items-center justify-center rounded-full bg-white/20" aria-label="მეტი">
+                        <svg viewBox="0 0 24 24" class="size-5" fill="currentColor" aria-hidden="true"><circle cx="6" cy="12" r="1.4"></circle><circle cx="12" cy="12" r="1.4"></circle><circle cx="18" cy="12" r="1.4"></circle></svg>
+                    </button>
+                @else
+                    <span class="size-10"></span>
+                @endunless
             </div>
 
             <p class="relative mt-6 text-sm text-white/85">
@@ -68,21 +77,15 @@
                         <div class="space-y-2">
                             @foreach ($poll->options as $option)
                                 @php $selected = $myVote?->poll_option_id === $option->id; @endphp
-                                <button type="button" wire:click="voteOption({{ $poll->id }}, {{ $option->id }})" class="flex w-full items-center gap-3 rounded-2xl bg-white px-3 py-3 text-left">
-                                    <span @class(['flex size-5 shrink-0 items-center justify-center rounded-full border-2', 'border-marker' => $selected, 'border-[#d5d0e2]' => ! $selected])>
-                                        @if ($selected)
-                                            <span class="size-2.5 rounded-full bg-marker"></span>
-                                        @endif
-                                    </span>
-                                    <span class="min-w-0 flex-1 truncate font-medium">{{ $option->label }}</span>
-                                    <span class="text-sm text-bought">{{ $option->votes->count() }} ხმა</span>
-                                    <span class="flex -space-x-1.5">
-                                        @foreach ($option->votes->take(3) as $vote)
-                                            @php $voteTint = \App\Support\ListAppearance::tint((string) $vote->user_id); @endphp
-                                            <span class="flex size-6 items-center justify-center rounded-full text-[10px] font-medium" style="background: {{ $voteTint['bg'] }}; color: {{ $voteTint['ink'] }}">{{ $vote->user?->initials() }}</span>
-                                        @endforeach
-                                    </span>
-                                </button>
+                                @if ($readonly)
+                                    <div class="flex w-full items-center gap-3 rounded-2xl bg-white px-3 py-3">
+                                        @include('livewire.lists.partials.poll-option')
+                                    </div>
+                                @else
+                                    <button type="button" wire:click="voteOption({{ $poll->id }}, {{ $option->id }})" class="flex w-full items-center gap-3 rounded-2xl bg-white px-3 py-3 text-left">
+                                        @include('livewire.lists.partials.poll-option')
+                                    </button>
+                                @endif
                             @endforeach
                         </div>
                         @if ($canEdit)
@@ -117,6 +120,12 @@
                                         <svg viewBox="0 0 16 16" class="size-3.5" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M3.5 8.2 6.4 11 12.5 4.8"></path></svg>
                                     @endif
                                 </button>
+                            @else
+                                <span role="img" aria-label="{{ $dishDone ? 'კერძი მონიშნულია' : 'კერძი მონიშნული არ არის' }}" @class(['flex size-6 shrink-0 items-center justify-center rounded-full border-2 text-white', 'border-[#d9d4e6]' => ! $dishDone]) @if ($dishDone) style="background: {{ $list->accent_color }}; border-color: {{ $list->accent_color }}" @endif>
+                                    @if ($dishDone)
+                                        <svg viewBox="0 0 16 16" class="size-3.5" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M3.5 8.2 6.4 11 12.5 4.8"></path></svg>
+                                    @endif
+                                </span>
                             @endif
                         </div>
                         <div class="mt-1 divide-y divide-[#f1eef6]">
@@ -178,6 +187,10 @@
                 @endif
             </div>
         @endif
+
+        @if ($readonly)
+            <p class="px-5 pb-8 pt-2 text-center text-sm text-bought">ამ ბმულით სია მხოლოდ ჩანს. მონიშვნა და შეცვლა გამორთულია.</p>
+        @endif
     </div>
 
     @if ($canEdit && $panel === '')
@@ -189,7 +202,7 @@
         </div>
     @endif
 
-    @if ($panel === 'menu')
+    @if (! $readonly && $panel === 'menu')
         <div class="slip-scrim fixed inset-0 z-30 bg-ink/45" wire:click="$set('panel', '')"></div>
         <div class="slip-up fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-[430px] space-y-2 rounded-t-[28px] bg-white px-5 py-5 text-ink">
             <div class="mb-2 flex items-center justify-between">
@@ -198,7 +211,7 @@
             </div>
             @if ($canManage)
                 <button type="button" wire:click="$set('panel', 'settings')" class="flex h-12 w-full items-center rounded-2xl bg-phone px-4 text-left">სიის სახე</button>
-                <button type="button" wire:click="$set('panel', 'share')" class="flex h-12 w-full items-center rounded-2xl bg-phone px-4 text-left">ხალხი</button>
+                <button type="button" wire:click="openPeople" class="flex h-12 w-full items-center rounded-2xl bg-phone px-4 text-left">გაზიარება</button>
             @endif
             <label class="flex h-12 items-center justify-between rounded-2xl bg-phone px-4">
                 <span>მხოლოდ ჩემი</span>
@@ -210,7 +223,7 @@
         </div>
     @endif
 
-    @if (in_array($panel, ['create', 'item'], true) && $canEdit)
+    @if (! $readonly && in_array($panel, ['create', 'item'], true) && $canEdit)
         <div class="slip-scrim fixed inset-0 z-30 bg-ink/45" wire:click="$set('panel', '')"></div>
         <div class="slip-up aisle-float fixed inset-x-4 bottom-4 z-40 mx-auto max-h-[88dvh] w-auto max-w-[398px] overflow-y-auto rounded-[28px] bg-white p-5 text-ink">
             <div class="mb-4 flex items-center justify-between">
@@ -326,7 +339,7 @@
         </div>
     @endif
 
-    @if ($panel === 'settings' && $canManage)
+    @if (! $readonly && $panel === 'settings' && $canManage)
         <div class="slip-scrim fixed inset-0 z-30 bg-ink/45" wire:click="$set('panel', '')"></div>
         <form wire:submit="saveAppearance" class="slip-up fixed inset-x-0 bottom-0 z-40 mx-auto max-h-[92dvh] w-full max-w-[430px] space-y-4 overflow-y-auto rounded-t-[28px] bg-white px-5 py-5 text-ink">
             <div class="flex items-center justify-between">
@@ -379,21 +392,43 @@
         </form>
     @endif
 
-    @if ($panel === 'share' && $canManage)
+    @if (! $readonly && $panel === 'share' && $canManage)
         <div class="slip-scrim fixed inset-0 z-30 bg-ink/45" wire:click="$set('panel', '')"></div>
-        <div class="slip-up fixed inset-x-0 bottom-0 z-40 mx-auto max-h-[92dvh] w-full max-w-[430px] space-y-4 overflow-y-auto rounded-t-[28px] bg-white px-5 py-5 text-ink">
+        <div class="slip-up fixed inset-x-0 bottom-0 z-40 mx-auto max-h-[92dvh] w-full max-w-[430px] space-y-5 overflow-y-auto rounded-t-[28px] bg-white px-5 py-5 text-ink">
             <div class="flex items-center justify-between">
-                <h2 class="font-sign text-xl font-bold">ხალხი</h2>
+                <h2 class="font-sign text-xl font-bold">გაზიარება</h2>
                 <button type="button" wire:click="$set('panel', '')" class="font-medium text-marker">დახურვა</button>
             </div>
-            <button type="button" wire:click="share('viewer')" class="h-12 w-full rounded-full bg-phone">ნახვის ბმულის შეცვლა</button>
-            @if ($viewLink)
-                <input readonly value="{{ route('lists.join', $viewLink->token) }}" class="{{ $field }} text-sm">
-            @endif
-            <button type="button" wire:click="share('editor')" class="h-12 w-full rounded-full bg-phone">რედაქტირების ბმულის შეცვლა</button>
-            @if ($editLink)
-                <input readonly value="{{ route('lists.join', $editLink->token) }}" class="{{ $field }} text-sm">
-            @endif
+
+            <section class="space-y-2">
+                <h3 class="font-medium">ნახვის ბმული</h3>
+                <p class="text-sm leading-relaxed text-bought">მეგობარი ხედავს სიას ისე, როგორც არის. ვერ მონიშნავს და ვერაფერს შეცვლის.</p>
+                @if ($viewLink)
+                    <div x-data="{ copied: false, copy() { const field = this.$refs.link; const value = field.value; if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(value).then(() => { this.copied = true }).catch(() => { field.focus(); field.select(); }); } else { field.focus(); field.select(); } } }">
+                        <input x-ref="link" readonly value="{{ route('lists.view', $viewLink->token) }}" class="{{ $field }} text-xs">
+                        <div class="mt-2 grid grid-cols-2 gap-2">
+                            <button type="button" class="h-12 rounded-full bg-ink text-sm font-medium text-white" x-on:click="copy()" x-text="copied ? 'დაკოპირდა' : 'კოპირება'">კოპირება</button>
+                            <button type="button" wire:click="share('viewer')" wire:confirm="ძველი ნახვის ბმული გაუქმდეს?" class="h-12 rounded-full bg-phone text-sm">ახალი ბმული</button>
+                        </div>
+                    </div>
+                @endif
+            </section>
+
+            <section class="space-y-2">
+                <h3 class="font-medium">რედაქტირების ბმული</h3>
+                <p class="text-sm leading-relaxed text-bought">მეგობარი შედის ან რეგისტრირდება და შემდეგ სიას ერთად არედაქტირებს.</p>
+                @if ($editLink)
+                    <div x-data="{ copied: false, copy() { const field = this.$refs.link; const value = field.value; if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(value).then(() => { this.copied = true }).catch(() => { field.focus(); field.select(); }); } else { field.focus(); field.select(); } } }">
+                        <input x-ref="link" readonly value="{{ route('lists.join', $editLink->token) }}" class="{{ $field }} text-xs">
+                        <div class="mt-2 grid grid-cols-2 gap-2">
+                            <button type="button" class="h-12 rounded-full bg-ink text-sm font-medium text-white" x-on:click="copy()" x-text="copied ? 'დაკოპირდა' : 'კოპირება'">კოპირება</button>
+                            <button type="button" wire:click="share('editor')" wire:confirm="ძველი რედაქტირების ბმული გაუქმდეს?" class="h-12 rounded-full bg-phone text-sm">ახალი ბმული</button>
+                        </div>
+                    </div>
+                @endif
+            </section>
+
+            <h3 class="font-medium">წევრები</h3>
             <ul>
                 @foreach ($list->members as $member)
                     @php $memberTint = \App\Support\ListAppearance::tint((string) $member->user_id); @endphp

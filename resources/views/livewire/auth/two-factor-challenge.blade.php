@@ -1,5 +1,5 @@
 <x-layouts::auth :title="__('Two-factor authentication')">
-    <div class="flex flex-col gap-6">
+    <div class="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-5 py-8">
         <div
             class="relative w-full h-auto"
             x-cloak

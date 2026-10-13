@@ -23,6 +23,17 @@
                 <svg viewBox="0 0 16 16" class="size-3.5" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M3.5 8.2 6.4 11 12.5 4.8"></path></svg>
             @endif
         </button>
+    @else
+        <span
+            role="img"
+            aria-label="{{ $checked ? 'მონიშნულია' : 'მონიშნული არ არის' }}"
+            @class(['flex size-6 shrink-0 items-center justify-center border-2 text-white', $shape, 'border-[#d9d4e6] bg-white' => ! $filled])
+            @if ($filled) style="background: {{ $list->accent_color }}; border-color: {{ $list->accent_color }}" @endif
+        >
+            @if ($checked)
+                <svg viewBox="0 0 16 16" class="size-3.5" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M3.5 8.2 6.4 11 12.5 4.8"></path></svg>
+            @endif
+        </span>
     @endif
 
     @if ($itemPhoto)

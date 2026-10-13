@@ -7,6 +7,7 @@ use App\Models\ShareLink;
 use App\Models\ShoppingList;
 use App\Models\User;
 use App\Repositories\Contracts\ShoppingListRepository;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Validation\ValidationException;
 
 class ShareLinkService
@@ -20,14 +21,40 @@ class ShareLinkService
     public function replace(User $user, ShoppingList $list, ListRole $role): ShareLink
     {
         $this->access->requireManage($user, $list);
-
-        if ($role === ListRole::Owner) {
-            throw ValidationException::withMessages([
-                'role' => 'ბმული შეიძლება იყოს ნახვა ან რედაქტირება.',
-            ]);
-        }
+        $this->assertShareRole($role);
 
         return $this->lists->replaceShareLink($list, $user, $role);
+    }
+
+    public function ensure(User $user, ShoppingList $list, ListRole $role): ShareLink
+    {
+        $this->access->requireManage($user, $list);
+        $this->assertShareRole($role);
+
+        return $this->lists->latestShareLink($list, $role)
+            ?? $this->lists->replaceShareLink($list, $user, $role);
+    }
+
+    public function find(string $token): ShareLink
+    {
+        $link = $this->lists->findShareLink($token);
+
+        if ($link->list === null) {
+            throw (new ModelNotFoundException)->setModel(ShareLink::class);
+        }
+
+        return $link;
+    }
+
+    public function preview(string $token): ShoppingList
+    {
+        $link = $this->find($token);
+
+        if ($link->role !== ListRole::Viewer) {
+            throw (new ModelNotFoundException)->setModel(ShareLink::class);
+        }
+
+        return $this->lists->findByShareToken($token);
     }
 
     public function join(User $user, string $token): ShoppingList
@@ -64,5 +91,14 @@ class ShareLinkService
         }
 
         return $this->lists->findForMember($list->id, $user);
+    }
+
+    private function assertShareRole(ListRole $role): void
+    {
+        if ($role === ListRole::Owner) {
+            throw ValidationException::withMessages([
+                'role' => 'ბმული შეიძლება იყოს ნახვა ან რედაქტირება.',
+            ]);
+        }
     }
 }

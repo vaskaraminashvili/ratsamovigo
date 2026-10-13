@@ -55,7 +55,11 @@ it('lets a viewer like and vote but not add an item', function () {
     $item = app(ListItemService::class)->add($owner, $list, ['name' => 'პური']);
     app(ListItemService::class)->toggleLike($viewer, $shared, $item->id);
 
-    expect($item->fresh()->likes)->toHaveCount(1);
+    expect($item->fresh()->likes)->toHaveCount(1)
+        ->and($item->fresh()->is_checked)->toBeFalse();
+
+    expect(fn () => app(ListItemService::class)->toggleCheck($viewer, $shared, $item->id))
+        ->toThrow(AuthorizationException::class);
 });
 
 it('turns the winning poll option into an item', function () {
@@ -198,4 +202,131 @@ it('renders the lists page', function () {
         ->call('createList')
         ->assertHasNoErrors()
         ->assertRedirect(route('lists.show', 1));
+});
+
+it('shows a read only list from the view link', function () {
+    $owner = User::factory()->create();
+    $list = app(ShoppingListService::class)->create($owner, ['name' => 'სასურსათო']);
+    $item = app(ListItemService::class)->add($owner, $list, ['name' => 'რძე']);
+    app(ListItemService::class)->toggleCheck($owner, $list, $item->id);
+    app(PollService::class)->create($owner, $list, 'რა ვიყიდოთ?', ['კოლა', 'ფანტა']);
+
+    $view = app(ShareLinkService::class)->replace($owner, $list, ListRole::Viewer);
+
+    $this->get(route('lists.view', $view->token))
+        ->assertOk()
+        ->assertSee('სასურსათო')
+        ->assertSee('რძე')
+        ->assertSee('კოლა')
+        ->assertSee('მხოლოდ ნახვა')
+        ->assertSee('მონიშნულია')
+        ->assertDontSee('toggleCheck', false)
+        ->assertDontSee('voteOption', false)
+        ->assertDontSee('ვიყიდი')
+        ->assertDontSee('დამატება');
+
+    expect($list->members()->count())->toBe(1)
+        ->and($item->fresh()->is_checked)->toBeTrue();
+});
+
+it('turns an edit link into membership after login', function () {
+    $owner = User::factory()->create();
+    $friend = User::factory()->create();
+    $list = app(ShoppingListService::class)->create($owner, ['name' => 'საღამო']);
+    $edit = app(ShareLinkService::class)->replace($owner, $list, ListRole::Editor);
+
+    $this->get(route('lists.join', $edit->token))
+        ->assertOk()
+        ->assertSee('საღამო')
+        ->assertSee('რეგისტრაცია')
+        ->assertSee('შესვლა');
+
+    $this->post(route('login.store'), [
+        'email' => $friend->email,
+        'password' => 'password',
+    ])->assertRedirect(route('lists.join', $edit->token));
+
+    $this->get(route('lists.join', $edit->token))
+        ->assertRedirect(route('lists.show', $list));
+
+    $member = $list->members()->where('user_id', $friend->id)->first();
+
+    expect($member->role)->toBe(ListRole::Editor);
+
+    $shared = app(ShoppingListService::class)->findForMember($list->id, $friend);
+    app(ListItemService::class)->add($friend, $shared, ['name' => 'პური']);
+
+    expect($list->items()->where('name', 'პური')->exists())->toBeTrue();
+});
+
+it('keeps an edit invite until a new account verifies its email', function () {
+    $owner = User::factory()->create();
+    $list = app(ShoppingListService::class)->create($owner, ['name' => 'საღამო']);
+    $edit = app(ShareLinkService::class)->replace($owner, $list, ListRole::Editor);
+
+    $this->get(route('lists.join', $edit->token));
+
+    $this->post(route('register.store'), [
+        'name' => 'Friend',
+        'email' => 'friend@example.com',
+        'password' => 'password',
+        'password_confirmation' => 'password',
+    ])->assertRedirect(route('lists.join', $edit->token));
+
+    $friend = User::query()->where('email', 'friend@example.com')->first();
+
+    $this->get(route('lists.join', $edit->token))
+        ->assertRedirect(route('verification.notice'));
+
+    expect($list->members()->where('user_id', $friend->id)->exists())->toBeFalse();
+
+    $friend->markEmailAsVerified();
+
+    $this->actingAs($friend->fresh())
+        ->get(route('lists.join', $edit->token))
+        ->assertRedirect(route('lists.show', $list));
+
+    expect($list->members()->where('user_id', $friend->id)->first()->role)->toBe(ListRole::Editor);
+});
+
+it('sends a view token on the edit invite path to the read only page', function () {
+    $owner = User::factory()->create();
+    $list = app(ShoppingListService::class)->create($owner, ['name' => 'სასურსათო']);
+    $view = app(ShareLinkService::class)->replace($owner, $list, ListRole::Viewer);
+    $edit = app(ShareLinkService::class)->replace($owner, $list, ListRole::Editor);
+
+    $this->get(route('lists.join', $view->token))
+        ->assertRedirect(route('lists.view', $view->token));
+
+    $this->get(route('lists.view', $edit->token))
+        ->assertRedirect(route('lists.join', $edit->token));
+
+    $this->get(route('lists.view', 'missing-token'))->assertNotFound();
+    $this->get(route('lists.join', 'missing-token'))->assertNotFound();
+
+    expect($list->members()->count())->toBe(1);
+});
+
+it('gives the owner a view link and an edit link to copy', function () {
+    $owner = User::factory()->create();
+    $list = app(ShoppingListService::class)->create($owner, ['name' => 'სასურსათო']);
+
+    $this->actingAs($owner);
+
+    $component = Livewire::test(Show::class, ['shoppingList' => $list])
+        ->call('openPeople')
+        ->assertSet('panel', 'share')
+        ->assertSee('ნახვის ბმული')
+        ->assertSee('რედაქტირების ბმული');
+
+    $view = $list->shareLinks()->where('role', ListRole::Viewer)->first();
+    $edit = $list->shareLinks()->where('role', ListRole::Editor)->first();
+
+    $component
+        ->assertSee(route('lists.view', $view->token), false)
+        ->assertSee(route('lists.join', $edit->token), false)
+        ->call('share', 'viewer');
+
+    $this->get(route('lists.view', $view->token))->assertNotFound();
+    expect($list->shareLinks()->where('role', ListRole::Viewer)->where('token', $view->token)->exists())->toBeFalse();
 });

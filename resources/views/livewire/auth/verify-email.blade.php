@@ -1,5 +1,5 @@
 <x-layouts::auth :title="__('Email verification')">
-    <div class="mt-4 flex flex-col gap-6">
+    <div class="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-5 py-8">
         <flux:text class="text-center">
             {{ __('Please verify your email address by clicking on the link we just emailed to you.') }}
         </flux:text>
