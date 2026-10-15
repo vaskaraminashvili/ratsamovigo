@@ -14,5 +14,9 @@ class ExampleTest extends TestCase
         $response = $this->get(route('home'));
 
         $response->assertOk();
+        $response->assertSee('ერთი სია', false);
+        $response->assertSee('შექმენი პირველი სია', false);
+        $response->assertSee('საერთო საყიდლები, მარტივად.', false);
+        $response->assertDontSee('Gather', false);
     }
 }
