@@ -1,0 +1,196 @@
+<section class="w-full">
+    @include('partials.settings-heading')
+
+    <h2 class="sr-only">რჩეულები</h2>
+
+    @php
+        $field = 'h-12 w-full rounded-2xl bg-phone px-3 text-base text-ink outline-none ring-1 ring-transparent focus:ring-2 focus:ring-marker';
+    @endphp
+
+    <x-settings.layout heading="რჩეულები" subheading="შენახული ნივთები და კერძები სიაში ერთი შეხებით ჩასასმელად" :wide="true">
+        <div class="space-y-10">
+            <section class="space-y-4">
+                <h3 class="font-sign text-xl font-bold text-ink dark:text-white">ნივთები</h3>
+
+                <form wire:submit="saveItem" class="space-y-3 rounded-[28px] bg-white p-4 text-ink">
+                    <label class="block text-sm text-bought">
+                        სახელი
+                        <input wire:model="itemName" class="{{ $field }} mt-1" maxlength="120" placeholder="ღვინო">
+                    </label>
+                    @error('itemName') <p class="text-sm text-wine">{{ $message }}</p> @enderror
+
+                    <label class="block text-sm text-bought">
+                        რაოდენობა
+                        <input wire:model="itemQuantity" class="{{ $field }} mt-1" maxlength="40" placeholder="1 ბოთლი">
+                    </label>
+                    @error('itemQuantity') <p class="text-sm text-wine">{{ $message }}</p> @enderror
+
+                    <label class="block text-sm text-bought">
+                        ემოჯი
+                        <input wire:model="itemEmoji" class="{{ $field }} mt-1" maxlength="8" placeholder="🍷">
+                    </label>
+                    @error('itemEmoji') <p class="text-sm text-wine">{{ $message }}</p> @enderror
+
+                    <label class="block text-sm text-bought">
+                        შენიშვნა
+                        <textarea wire:model="itemNote" rows="3" maxlength="200" class="mt-1 w-full rounded-2xl bg-phone px-3 py-3 text-base text-ink outline-none ring-1 ring-transparent focus:ring-2 focus:ring-marker" placeholder="საუკეთესო ბოთლი ამ მისამართზეა"></textarea>
+                    </label>
+                    @error('itemNote') <p class="text-sm text-wine">{{ $message }}</p> @enderror
+
+                    <div class="flex items-center gap-3">
+                        <button type="submit" class="slip-press h-12 rounded-full bg-ink px-5 text-sm font-medium text-white">
+                            {{ $editingItemId ? 'შენახვა' : 'დამატება' }}
+                        </button>
+                        @if ($editingItemId)
+                            <button type="button" wire:click="cancelItem" class="h-12 text-sm text-bought">გაუქმება</button>
+                        @endif
+                    </div>
+                </form>
+
+                @forelse ($items as $item)
+                    <article wire:key="favorite-item-{{ $item->id }}" class="rounded-[28px] bg-white p-4 text-ink">
+                        <p class="font-medium">
+                            @if ($item->emoji)
+                                <span class="mr-1">{{ $item->emoji }}</span>
+                            @endif
+                            {{ $item->name }}
+                        </p>
+                        @if ($item->quantity)
+                            <p class="mt-1 text-sm text-bought">{{ $item->quantity }}</p>
+                        @endif
+                        @if ($item->note)
+                            <p class="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed">{{ $item->note }}</p>
+                        @endif
+                        <div class="mt-3 flex gap-4 text-sm">
+                            <button type="button" wire:click="editItem({{ $item->id }})" class="font-medium text-marker">რედაქტირება</button>
+                            <button type="button" wire:click="deleteItem({{ $item->id }})" class="text-wine">წაშლა</button>
+                        </div>
+                    </article>
+                @empty
+                    <p class="text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">ჯერ არაფერი გაქვს შენახული. დაამატე ღვინო, რძე, ან სხვა რაც ხშირად გჭირდება.</p>
+                @endforelse
+            </section>
+
+            <section class="space-y-4">
+                <h3 class="font-sign text-xl font-bold text-ink dark:text-white">კერძები</h3>
+
+                <form wire:submit="saveDish" class="space-y-3 rounded-[28px] bg-white p-4 text-ink">
+                    <label class="block text-sm text-bought">
+                        კერძი
+                        <input wire:model="dishName" class="{{ $field }} mt-1" maxlength="120" placeholder="პასტა">
+                    </label>
+                    @error('dishName') <p class="text-sm text-wine">{{ $message }}</p> @enderror
+
+                    <label class="block text-sm text-bought">
+                        ემოჯი
+                        <input wire:model="dishEmoji" class="{{ $field }} mt-1" maxlength="8" placeholder="🍝">
+                    </label>
+                    @error('dishEmoji') <p class="text-sm text-wine">{{ $message }}</p> @enderror
+
+                    <label class="block text-sm text-bought">
+                        შენიშვნა
+                        <textarea wire:model="dishNote" rows="2" maxlength="200" class="mt-1 w-full rounded-2xl bg-phone px-3 py-3 text-base text-ink outline-none ring-1 ring-transparent focus:ring-2 focus:ring-marker" placeholder="შენიშვნა"></textarea>
+                    </label>
+                    @error('dishNote') <p class="text-sm text-wine">{{ $message }}</p> @enderror
+
+                    <div class="flex items-center gap-3">
+                        <button type="submit" class="slip-press h-12 rounded-full bg-ink px-5 text-sm font-medium text-white">
+                            {{ $editingDishId ? 'შენახვა' : 'კერძის დამატება' }}
+                        </button>
+                        @if ($editingDishId)
+                            <button type="button" wire:click="cancelDish" class="h-12 text-sm text-bought">გაუქმება</button>
+                        @endif
+                    </div>
+                </form>
+
+                @forelse ($dishes as $dish)
+                    <article wire:key="favorite-dish-{{ $dish->id }}" class="rounded-[28px] bg-white p-4 text-ink">
+                        <p class="text-xs text-bought">კერძი</p>
+                        <h4 class="font-medium">
+                            @if ($dish->emoji)
+                                <span class="mr-1">{{ $dish->emoji }}</span>
+                            @endif
+                            {{ $dish->name }}
+                        </h4>
+                        @if ($dish->note)
+                            <p class="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed">{{ $dish->note }}</p>
+                        @endif
+                        <div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                            <button type="button" wire:click="editDish({{ $dish->id }})" class="font-medium text-marker">რედაქტირება</button>
+                            <button type="button" wire:click="startIngredient({{ $dish->id }})" class="font-medium text-marker">ინგრედიენტის დამატება</button>
+                            <button type="button" wire:click="deleteDish({{ $dish->id }})" class="text-wine">წაშლა</button>
+                        </div>
+
+                        @if ($dish->items->isNotEmpty())
+                            <ul class="mt-3 divide-y divide-[#f1eef6]">
+                                @foreach ($dish->items as $ingredient)
+                                    <li wire:key="favorite-ingredient-{{ $ingredient->id }}" class="py-3">
+                                        <p class="font-medium">
+                                            @if ($ingredient->emoji)
+                                                <span class="mr-1">{{ $ingredient->emoji }}</span>
+                                            @endif
+                                            {{ $ingredient->name }}
+                                        </p>
+                                        @if ($ingredient->quantity)
+                                            <p class="mt-0.5 text-sm text-bought">{{ $ingredient->quantity }}</p>
+                                        @endif
+                                        @if ($ingredient->note)
+                                            <p class="mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed">{{ $ingredient->note }}</p>
+                                        @endif
+                                        <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                                            @if (! $loop->first)
+                                                <button type="button" wire:click="moveIngredient({{ $dish->id }}, {{ $ingredient->id }}, 'up')" class="text-marker" aria-label="ზემოთ">ზემოთ</button>
+                                            @endif
+                                            @if (! $loop->last)
+                                                <button type="button" wire:click="moveIngredient({{ $dish->id }}, {{ $ingredient->id }}, 'down')" class="text-marker" aria-label="ქვემოთ">ქვემოთ</button>
+                                            @endif
+                                            <button type="button" wire:click="editIngredient({{ $dish->id }}, {{ $ingredient->id }})" class="text-marker">რედაქტირება</button>
+                                            <button type="button" wire:click="deleteIngredient({{ $dish->id }}, {{ $ingredient->id }})" class="text-wine">წაშლა</button>
+                                        </div>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @endif
+
+                        @if ($ingredientDishId === $dish->id)
+                            <form wire:submit="saveIngredient({{ $dish->id }})" class="mt-3 space-y-3 border-t border-[#f1eef6] pt-3">
+                                <label class="block text-sm text-bought">
+                                    ინგრედიენტი
+                                    <input wire:model="ingredientName" class="{{ $field }} mt-1" maxlength="120" placeholder="სოუსი">
+                                </label>
+                                @error('ingredientName') <p class="text-sm text-wine">{{ $message }}</p> @enderror
+
+                                <label class="block text-sm text-bought">
+                                    რაოდენობა
+                                    <input wire:model="ingredientQuantity" class="{{ $field }} mt-1" maxlength="40" placeholder="1">
+                                </label>
+                                @error('ingredientQuantity') <p class="text-sm text-wine">{{ $message }}</p> @enderror
+
+                                <label class="block text-sm text-bought">
+                                    ემოჯი
+                                    <input wire:model="ingredientEmoji" class="{{ $field }} mt-1" maxlength="8" placeholder="🍅">
+                                </label>
+                                @error('ingredientEmoji') <p class="text-sm text-wine">{{ $message }}</p> @enderror
+
+                                <label class="block text-sm text-bought">
+                                    შენიშვნა
+                                    <input wire:model="ingredientNote" class="{{ $field }} mt-1" maxlength="200" placeholder="შენიშვნა">
+                                </label>
+                                @error('ingredientNote') <p class="text-sm text-wine">{{ $message }}</p> @enderror
+
+                                <div class="flex items-center gap-3">
+                                    <button type="submit" class="slip-press h-12 rounded-full bg-ink px-5 text-sm font-medium text-white">
+                                        {{ $editingIngredientId ? 'შენახვა' : 'ინგრედიენტის დამატება' }}
+                                    </button>
+                                    <button type="button" wire:click="cancelIngredient" class="h-12 text-sm text-bought">გაუქმება</button>
+                                </div>
+                            </form>
+                        @endif
+                    </article>
+                @empty
+                    <p class="text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">შეინახე კერძი ინგრედიენტებით, რომ სიაში ერთი შეხებით ჩასვა.</p>
+                @endforelse
+            </section>
+        </div>
+    </x-settings.layout>
+</section>

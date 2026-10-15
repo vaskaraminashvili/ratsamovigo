@@ -134,7 +134,10 @@
                             @endforeach
                         </div>
                         @if ($canEdit)
-                            <button type="button" wire:click="startIngredient({{ \Illuminate\Support\Js::from($dishName) }})" class="mt-2 text-sm font-medium text-marker">+ ინგრედიენტის დამატება</button>
+                            <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+                                <button type="button" wire:click="startIngredient({{ \Illuminate\Support\Js::from($dishName) }})" class="text-sm font-medium text-marker">+ ინგრედიენტის დამატება</button>
+                                <button type="button" wire:click="rememberListDish({{ \Illuminate\Support\Js::from($dishName) }})" class="text-sm font-medium text-marker">კერძის შენახვა</button>
+                            </div>
                         @endif
                     </section>
                 @endforeach
@@ -194,7 +197,8 @@
     </div>
 
     @if ($canEdit && $panel === '')
-        <div class="pointer-events-none absolute inset-x-0 bottom-6 z-20 flex justify-center">
+        <div class="pointer-events-none absolute inset-x-0 bottom-6 z-20 flex justify-center gap-2 px-5">
+            <button type="button" wire:click="openFavorites" class="slip-press pointer-events-auto flex h-12 items-center rounded-full bg-white px-4 text-sm font-medium text-ink shadow-lg">რჩეულებიდან</button>
             <button type="button" wire:click="startCreate" class="slip-press pointer-events-auto flex h-12 items-center gap-2 rounded-full bg-ink px-5 text-sm font-medium text-white shadow-lg">
                 <svg viewBox="0 0 24 24" class="size-5" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
                 დამატება
@@ -325,6 +329,7 @@
                             <button type="button" wire:click="toggleLike({{ $editingItemId }})" class="h-12 w-full rounded-2xl bg-phone px-3 text-left">მოწონება</button>
                         @endif
                         <button type="button" wire:click="togglePin({{ $editingItemId }})" class="h-12 w-full rounded-2xl bg-phone">{{ $list->items->firstWhere('id', $editingItemId)?->is_pinned ? 'ჩამაგრებულია' : 'ზევით' }}</button>
+                        <button type="button" wire:click="rememberListItem({{ $editingItemId }})" class="h-12 w-full rounded-2xl bg-phone">რჩეულებში შენახვა</button>
                         <button type="button" wire:click="deleteItem({{ $editingItemId }})" class="h-12 w-full text-wine">წაშლა</button>
                         @if ($list->show_author)
                             <p class="text-sm text-bought">დაამატა {{ $list->items->firstWhere('id', $editingItemId)?->author?->name }}.</p>
@@ -447,5 +452,9 @@
                 @endforeach
             </ul>
         </div>
+    @endif
+
+    @if ($canEdit)
+        @include('livewire.lists.partials.favorites-sheet')
     @endif
 </div>

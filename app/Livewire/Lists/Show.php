@@ -5,11 +5,16 @@ namespace App\Livewire\Lists;
 use App\Contracts\DealOfferProvider;
 use App\Enums\CheckboxStyle;
 use App\Enums\ListRole;
+use App\Http\Requests\ApplyFavoritesRequest;
 use App\Http\Requests\StoreListItemRequest;
 use App\Http\Requests\StorePollRequest;
 use App\Http\Requests\UpdateShoppingListRequest;
+use App\Models\FavoriteDishItem;
+use App\Models\ListItem;
 use App\Models\ShoppingList;
 use App\Models\User;
+use App\Services\FavoriteApplyService;
+use App\Services\FavoriteService;
 use App\Services\ListAccess;
 use App\Services\ListItemService;
 use App\Services\PollService;
@@ -89,6 +94,21 @@ class Show extends Component
     public bool $showAuthor = true;
 
     public ?TemporaryUploadedFile $backgroundUpload = null;
+
+    public string $favoriteTab = 'items';
+
+    public ?int $pickingDishId = null;
+
+    /** @var array<int, int|string> */
+    public array $selectedIngredientIds = [];
+
+    public ?int $rememberItemId = null;
+
+    public string $rememberGroup = '';
+
+    public string $replaceFavoriteKind = '';
+
+    public string $returnPanel = '';
 
     public function mount(ShoppingList $shoppingList, ShoppingListService $lists): void
     {
@@ -344,7 +364,133 @@ class Show extends Component
         $lists->removeMember($this->user(), $this->shoppingList, $memberId);
     }
 
-    public function render(ShoppingListService $lists, ListAccess $access, DealOfferProvider $offers): View
+    public function openFavorites(): void
+    {
+        $this->favoriteTab = 'items';
+        $this->reset('pickingDishId', 'selectedIngredientIds');
+        $this->panel = 'favorites';
+    }
+
+    public function applyFavoriteItem(int $itemId, FavoriteApplyService $apply, FavoriteService $favorites): void
+    {
+        $item = $favorites->findItem($this->user(), $itemId);
+        $apply->applyItem($this->user(), $this->shoppingList, $item);
+        $this->panel = '';
+    }
+
+    public function openFavoriteDish(int $dishId, FavoriteService $favorites): void
+    {
+        $dish = $favorites->findDish($this->user(), $dishId);
+        $this->pickingDishId = $dish->id;
+        $this->selectedIngredientIds = $dish->items
+            ->map(fn (FavoriteDishItem $item): string => (string) $item->id)
+            ->values()
+            ->all();
+        $this->panel = 'favorite-dish';
+    }
+
+    public function applyFavoriteDish(FavoriteApplyService $apply, FavoriteService $favorites): void
+    {
+        if (! $this->pickingDishId) {
+            return;
+        }
+
+        validator(
+            [
+                'favorite_dish_id' => $this->pickingDishId,
+                'ingredient_ids' => $this->selectedIngredientIds,
+            ],
+            (new ApplyFavoritesRequest)->rules(),
+            (new ApplyFavoritesRequest)->messages(),
+        )->validate();
+
+        $dish = $favorites->findDish($this->user(), $this->pickingDishId);
+        $ingredientIds = [];
+
+        foreach ($this->selectedIngredientIds as $ingredientId) {
+            $ingredientIds[] = (int) $ingredientId;
+        }
+
+        $apply->applyDish(
+            $this->user(),
+            $this->shoppingList,
+            $dish,
+            $ingredientIds,
+        );
+
+        $this->reset('pickingDishId', 'selectedIngredientIds');
+        $this->panel = '';
+    }
+
+    public function rememberListItem(int $itemId, FavoriteService $favorites): void
+    {
+        $item = $this->listItem($itemId);
+
+        if (! $item) {
+            return;
+        }
+
+        if ($favorites->itemNamed($this->user(), $item->name)) {
+            $this->rememberItemId = $item->id;
+            $this->rememberGroup = '';
+            $this->replaceFavoriteKind = 'item';
+            $this->returnPanel = 'item';
+            $this->panel = 'favorite-replace';
+
+            return;
+        }
+
+        $favorites->rememberItem($this->user(), $item);
+    }
+
+    public function rememberListDish(string $groupName, FavoriteService $favorites): void
+    {
+        $groupName = trim($groupName);
+
+        if ($groupName === '') {
+            return;
+        }
+
+        if ($favorites->dishNamed($this->user(), $groupName)) {
+            $this->rememberItemId = null;
+            $this->rememberGroup = $groupName;
+            $this->replaceFavoriteKind = 'dish';
+            $this->returnPanel = '';
+            $this->panel = 'favorite-replace';
+
+            return;
+        }
+
+        $favorites->rememberDish($this->user(), $this->shoppingList, $groupName);
+    }
+
+    public function confirmReplaceFavorite(FavoriteService $favorites): void
+    {
+        if ($this->replaceFavoriteKind === 'item' && $this->rememberItemId) {
+            $item = $this->listItem($this->rememberItemId);
+
+            if ($item) {
+                $favorites->rememberItem($this->user(), $item, true);
+            }
+        }
+
+        if ($this->replaceFavoriteKind === 'dish' && $this->rememberGroup !== '') {
+            $favorites->rememberDish($this->user(), $this->shoppingList, $this->rememberGroup, true);
+        }
+
+        $panel = $this->returnPanel;
+        $this->reset('rememberItemId', 'rememberGroup', 'replaceFavoriteKind', 'returnPanel');
+        $this->panel = $panel;
+    }
+
+    public function dismissReplace(): void
+    {
+        $panel = $this->returnPanel;
+        $this->reset('rememberItemId', 'rememberGroup', 'replaceFavoriteKind', 'returnPanel');
+        $this->panel = $panel;
+    }
+
+    public function render(ShoppingListService $lists, ListAccess $access, DealOfferProvider $offers, FavoriteService $favorites): View
     {
         $list = $lists->findForMember($this->shoppingList->id, $this->user());
         $this->shoppingList = $list;
@@ -355,6 +501,14 @@ class Show extends Component
             : $list->items;
 
         $sort = fn ($item): string => ($item->is_checked ? '1' : '0').($item->is_pinned ? '0' : '1').$item->name;
+        $favoriteItems = collect();
+        $favoriteDishes = collect();
+
+        if ($role->canEdit() && in_array($this->panel, ['favorites', 'favorite-dish'], true)) {
+            $library = $favorites->library($this->user());
+            $favoriteItems = $library['items'];
+            $favoriteDishes = $library['dishes'];
+        }
 
         return view('livewire.lists.show', [
             'list' => $list,
@@ -376,7 +530,16 @@ class Show extends Component
             'dishes' => $visible->filter(fn ($item) => filled($item->group_name))->groupBy('group_name')->map(fn ($items) => $items->sortBy($sort)->values()),
             'polls' => $list->polls->sortByDesc('is_pinned')->values(),
             'activity' => ListActivity::events($list),
+            'favoriteItems' => $favoriteItems,
+            'favoriteDishes' => $favoriteDishes,
         ]);
+    }
+
+    private function listItem(int $itemId): ?ListItem
+    {
+        $item = $this->shoppingList->items->firstWhere('id', $itemId);
+
+        return $item instanceof ListItem ? $item : null;
     }
 
     /**
