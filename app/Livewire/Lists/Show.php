@@ -3,6 +3,7 @@
 namespace App\Livewire\Lists;
 
 use App\Contracts\DealOfferProvider;
+use App\Enums\BoughtBehavior;
 use App\Enums\CheckboxStyle;
 use App\Enums\ListRole;
 use App\Http\Requests\ApplyFavoritesRequest;
@@ -46,7 +47,7 @@ class Show extends Component
 
     public string $compose = 'item';
 
-    public bool $showChecked = true;
+    public bool $showChecked = false;
 
     public bool $onlyMine = false;
 
@@ -83,6 +84,8 @@ class Show extends Component
 
     public string $checkboxStyle = 'box';
 
+    public string $boughtBehavior = 'strike';
+
     public bool $showEmoji = true;
 
     public bool $showQuantity = true;
@@ -90,6 +93,8 @@ class Show extends Component
     public bool $showLikes = true;
 
     public bool $showAuthor = true;
+
+    public bool $fetchBestPrice = false;
 
     public ?TemporaryUploadedFile $backgroundUpload = null;
 
@@ -203,6 +208,12 @@ class Show extends Component
         $items->clearChecked($this->user(), $this->shoppingList);
     }
 
+    public function reopenChecked(ListItemService $items): void
+    {
+        $items->reopenChecked($this->user(), $this->shoppingList);
+        $this->showChecked = false;
+    }
+
     public function addPoll(PollService $polls): void
     {
         $rules = (new StorePollRequest)->rules();
@@ -273,6 +284,7 @@ class Show extends Component
         $this->showQuantity = (bool) $this->showQuantity;
         $this->showLikes = (bool) $this->showLikes;
         $this->showAuthor = (bool) $this->showAuthor;
+        $this->fetchBestPrice = (bool) $this->fetchBestPrice;
 
         if (! $this->backgroundUpload instanceof TemporaryUploadedFile) {
             $this->backgroundUpload = null;
@@ -285,10 +297,12 @@ class Show extends Component
             'accentColor' => $rules['accent_color'],
             'backgroundPreset' => $rules['background_preset'],
             'checkboxStyle' => $rules['checkbox_style'],
+            'boughtBehavior' => $rules['bought_behavior'],
             'showEmoji' => $rules['show_emoji'],
             'showQuantity' => $rules['show_quantity'],
             'showLikes' => $rules['show_likes'],
             'showAuthor' => $rules['show_author'],
+            'fetchBestPrice' => $rules['fetch_best_price'],
             'backgroundUpload' => $rules['background'],
         ], [
             'listName.required' => 'სიის სახელი სავალდებულოა.',
@@ -304,14 +318,28 @@ class Show extends Component
             'accent_color' => $validated['accentColor'],
             'background_preset' => $validated['backgroundPreset'],
             'checkbox_style' => $validated['checkboxStyle'],
+            'bought_behavior' => $validated['boughtBehavior'],
             'show_emoji' => $validated['showEmoji'],
             'show_quantity' => $validated['showQuantity'],
             'show_likes' => $validated['showLikes'],
             'show_author' => $validated['showAuthor'],
+            'fetch_best_price' => $validated['fetchBestPrice'],
         ], $this->backgroundUpload);
 
         $this->reset('backgroundUpload');
+        $this->showChecked = false;
         $this->panel = '';
+    }
+
+    public function updatedBoughtBehavior(ShoppingListService $lists): void
+    {
+        $this->showChecked = false;
+        $this->persistQuickSettings($lists);
+    }
+
+    public function updatedFetchBestPrice(ShoppingListService $lists): void
+    {
+        $this->persistQuickSettings($lists);
     }
 
     public function removeBackground(ShoppingListService $lists): void
@@ -493,6 +521,12 @@ class Show extends Component
         $visible = $this->onlyMine
             ? $list->items->where('claimed_by', $this->user()->id)->values()
             : $list->items;
+        $hidesBought = $list->bought_behavior === BoughtBehavior::Hide;
+        $hiddenCount = $hidesBought ? $visible->where('is_checked', true)->count() : 0;
+
+        if ($hidesBought && ! $this->showChecked) {
+            $visible = $visible->where('is_checked', false)->values();
+        }
 
         $sort = fn ($item): string => ($item->is_checked ? '1' : '0').($item->is_pinned ? '0' : '1').$item->name;
         $favoriteItems = collect();
@@ -514,17 +548,30 @@ class Show extends Component
             'accents' => ListAppearance::ACCENTS,
             'units' => ListAppearance::UNITS,
             'checkboxStyles' => CheckboxStyle::cases(),
+            'boughtBehaviors' => BoughtBehavior::cases(),
             'readonly' => false,
             'viewLink' => $list->shareLinks->firstWhere('role', ListRole::Viewer),
             'editLink' => $list->shareLinks->firstWhere('role', ListRole::Editor),
             'openCount' => $list->items->where('is_checked', false)->count(),
             'pickedCount' => $list->items->where('is_checked', true)->count(),
+            'hidesBought' => $hidesBought,
+            'hiddenCount' => $hiddenCount,
             'looseItems' => $visible->filter(fn ($item) => blank($item->group_name))->sortBy($sort)->values(),
             'dishes' => $visible->filter(fn ($item) => filled($item->group_name))->groupBy('group_name')->map(fn ($items) => $items->sortBy($sort)->values()),
             'polls' => $list->polls->sortByDesc('is_pinned')->values(),
             'activity' => ListActivity::events($list),
             'favoriteItems' => $favoriteItems,
             'favoriteDishes' => $favoriteDishes,
+        ]);
+    }
+
+    private function persistQuickSettings(ShoppingListService $lists): void
+    {
+        $this->fetchBestPrice = (bool) $this->fetchBestPrice;
+
+        $lists->updateQuickSettings($this->user(), $this->shoppingList, [
+            'bought_behavior' => $this->boughtBehavior,
+            'fetch_best_price' => $this->fetchBestPrice,
         ]);
     }
 
@@ -663,9 +710,11 @@ class Show extends Component
             ? $list->background_preset
             : 'sage';
         $this->checkboxStyle = $list->checkbox_style->value;
+        $this->boughtBehavior = $list->bought_behavior->value;
         $this->showQuantity = $list->show_quantity;
         $this->showLikes = $list->show_likes;
         $this->showAuthor = $list->show_author;
+        $this->fetchBestPrice = $list->fetch_best_price;
     }
 
     private function resetItemForm(): void

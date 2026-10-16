@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\BoughtBehavior;
 use App\Enums\CheckboxStyle;
 use App\Enums\ListRole;
 use App\Models\ShoppingList;
@@ -50,6 +51,8 @@ class ShoppingListService
             'emoji' => $this->blankToNull($data['emoji'] ?? null),
             'accent_color' => ListAppearance::ACCENTS[0],
             'checkbox_style' => CheckboxStyle::Circle,
+            'bought_behavior' => BoughtBehavior::Strike,
+            'fetch_best_price' => false,
         ]);
 
         $this->lists->addMember($list, $user, ListRole::Owner);
@@ -88,10 +91,12 @@ class ShoppingListService
             'accent_color' => $data['accent_color'],
             'background_preset' => $preset,
             'checkbox_style' => CheckboxStyle::from($data['checkbox_style']),
+            'bought_behavior' => BoughtBehavior::from($data['bought_behavior']),
             'show_emoji' => (bool) $data['show_emoji'],
             'show_quantity' => (bool) $data['show_quantity'],
             'show_likes' => (bool) $data['show_likes'],
             'show_author' => (bool) $data['show_author'],
+            'fetch_best_price' => (bool) $data['fetch_best_price'],
         ];
 
         $updated = $this->lists->update($list, $attributes);
@@ -101,6 +106,27 @@ class ShoppingListService
         }
 
         return $updated;
+    }
+
+    /**
+     * @param  array{bought_behavior: string, fetch_best_price: bool}  $data
+     */
+    public function updateQuickSettings(User $user, ShoppingList $list, array $data): ShoppingList
+    {
+        $this->access->requireManage($user, $list);
+
+        $behavior = BoughtBehavior::tryFrom($data['bought_behavior']);
+
+        if (! $behavior) {
+            throw ValidationException::withMessages([
+                'boughtBehavior' => 'აირჩიეთ ნაყიდის ქცევა.',
+            ]);
+        }
+
+        return $this->lists->update($list, [
+            'bought_behavior' => $behavior,
+            'fetch_best_price' => (bool) $data['fetch_best_price'],
+        ]);
     }
 
     public function removeBackground(User $user, ShoppingList $list): void

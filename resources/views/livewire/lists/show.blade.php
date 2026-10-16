@@ -67,7 +67,12 @@
             <h1 class="relative mt-1 font-sign text-[2rem] font-bold leading-tight">{{ $list->name }}</h1>
             <p class="relative mt-4 flex items-center gap-3 text-sm">
                 <span class="rounded-full bg-coral px-3 py-1 font-medium text-white">დარჩა {{ $openCount }}</span>
-                <span class="text-white/90">აღებულია {{ $pickedCount }}</span>
+                @if ($hidesBought && $hiddenCount > 0)
+                    <button type="button" wire:click="$toggle('showChecked')"
+                        class="text-white/90">დამალულია {{ $hiddenCount }}</button>
+                @else
+                    <span class="text-white/90">აღებულია {{ $pickedCount }}</span>
+                @endif
             </p>
         </header>
 
@@ -238,8 +243,12 @@
                 @endif
 
                 @if ($polls->isEmpty() && $dishes->isEmpty() && $looseItems->isEmpty())
-                    <p class="px-1 py-10 text-sm text-bought">
-                        {{ $canEdit ? 'პირველი ნივთი ქვემოთ ემატება.' : 'სია ცარიელია.' }}</p>
+                    @if ($hidesBought && $hiddenCount > 0 && ! $showChecked)
+                        <p class="px-1 py-10 text-sm text-bought">დამალულია {{ $hiddenCount }}</p>
+                    @else
+                        <p class="px-1 py-10 text-sm text-bought">
+                            {{ $canEdit ? 'პირველი ნივთი ქვემოთ ემატება.' : 'სია ცარიელია.' }}</p>
+                    @endif
                 @endif
             </div>
         @else
@@ -291,7 +300,7 @@
     @if (!$readonly && $panel === 'menu')
         <div class="slip-scrim fixed inset-0 z-30 bg-ink/45" wire:click="$set('panel', '')"></div>
         <div
-            class="slip-up fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-[430px] space-y-2 rounded-t-[28px] bg-white px-5 py-5 text-ink">
+            class="slip-up fixed inset-x-0 bottom-0 z-40 mx-auto max-h-[92dvh] w-full max-w-[430px] space-y-2 overflow-y-auto rounded-t-[28px] bg-white px-5 py-5 text-ink">
             <div class="mb-2 flex items-center justify-between">
                 <h2 class="font-sign text-xl font-bold">სია</h2>
                 <button type="button" wire:click="$set('panel', '')"
@@ -302,12 +311,32 @@
                     class="flex h-12 w-full items-center rounded-2xl bg-phone px-4 text-left">სიის სახე</button>
                 <button type="button" wire:click="openPeople"
                     class="flex h-12 w-full items-center rounded-2xl bg-phone px-4 text-left">გაზიარება</button>
+                <section class="space-y-2 pt-2">
+                    <h3 class="px-1 text-xs text-bought">სწრაფი პარამეტრები</h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        @foreach ($boughtBehaviors as $behavior)
+                            <button type="button" wire:click="$set('boughtBehavior', '{{ $behavior->value }}')"
+                                @class([
+                                    'min-h-12 rounded-2xl px-3 text-sm',
+                                    'bg-ink text-white' => $boughtBehavior === $behavior->value,
+                                    'bg-phone' => $boughtBehavior !== $behavior->value,
+                                ])>{{ $behavior->label() }}</button>
+                        @endforeach
+                    </div>
+                    <div class="flex h-12 items-center justify-between rounded-2xl bg-phone px-4">
+                        <span>საუკეთესო ფასი</span>
+                        <x-toggle lg="lg" wire:model.live="fetchBestPrice" />
+                    </div>
+                </section>
             @endif
             <div class="flex h-12 items-center justify-between rounded-2xl bg-phone px-4">
                 <span>მხოლოდ ჩემი</span>
                 <x-toggle lg="lg" wire:model.live="onlyMine" />
             </div>
-            @if ($canEdit && $pickedCount > 0)
+            @if ($canEdit && $hidesBought && $hiddenCount > 0)
+                <button type="button" wire:click="reopenChecked"
+                    class="flex h-12 w-full items-center rounded-2xl bg-phone px-4 text-left">თავიდან</button>
+            @elseif ($canEdit && $pickedCount > 0)
                 <button type="button" wire:click="clearChecked" class="h-12 w-full text-sm text-wine">მონიშნულის
                     გასუფთავება</button>
             @endif
@@ -498,6 +527,16 @@
                         ])>{{ $style->label() }}</button>
                 @endforeach
             </div>
+            <div class="grid grid-cols-2 gap-2">
+                @foreach ($boughtBehaviors as $behavior)
+                    <button type="button" wire:click="$set('boughtBehavior', '{{ $behavior->value }}')"
+                        @class([
+                            'min-h-12 rounded-2xl px-3 text-sm',
+                            'bg-ink text-white' => $boughtBehavior === $behavior->value,
+                            'bg-phone' => $boughtBehavior !== $behavior->value,
+                        ])>{{ $behavior->label() }}</button>
+                @endforeach
+            </div>
             <div class="flex h-12 items-center justify-between"><span>ემოჯი</span><x-toggle lg="lg"
                     wire:model.live="showEmoji" /></div>
             <div class="flex h-12 items-center justify-between"><span>რაოდენობა</span><x-toggle lg="lg"
@@ -506,6 +545,8 @@
                     wire:model.live="showLikes" /></div>
             <div class="flex h-12 items-center justify-between"><span>ავტორი</span><x-toggle lg="lg"
                     wire:model.live="showAuthor" /></div>
+            <div class="flex h-12 items-center justify-between"><span>საუკეთესო ფასი</span><x-toggle lg="lg"
+                    wire:model.live="fetchBestPrice" /></div>
             <x-button submit lg round class="w-full" wire:loading.attr="disabled"
                 wire:target="backgroundUpload,saveAppearance">
                 <span wire:loading.remove wire:target="saveAppearance">შენახვა</span>

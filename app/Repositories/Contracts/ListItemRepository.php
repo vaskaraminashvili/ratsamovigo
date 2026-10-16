@@ -33,6 +33,8 @@ interface ListItemRepository
 
     public function clearChecked(ShoppingList $list): void;
 
+    public function reopenChecked(ShoppingList $list): void;
+
     public function unpinAll(ShoppingList $list): void;
 
     public function toggleLike(ListItem $item, User $user): bool;

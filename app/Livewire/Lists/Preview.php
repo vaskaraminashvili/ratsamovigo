@@ -3,6 +3,7 @@
 namespace App\Livewire\Lists;
 
 use App\Contracts\DealOfferProvider;
+use App\Enums\BoughtBehavior;
 use App\Enums\ListRole;
 use App\Services\ShareLinkService;
 use App\Support\ListActivity;
@@ -21,6 +22,8 @@ class Preview extends Component
     public string $token = '';
 
     public string $screen = 'list';
+
+    public bool $showChecked = false;
 
     public function mount(string $token, ShareLinkService $links): void
     {
@@ -42,6 +45,10 @@ class Preview extends Component
     public function render(ShareLinkService $links, DealOfferProvider $offers): View
     {
         $list = $links->preview($this->token);
+        $hidesBought = $list->bought_behavior === BoughtBehavior::Hide;
+        $visible = $hidesBought && ! $this->showChecked
+            ? $list->items->where('is_checked', false)->values()
+            : $list->items;
         $sort = fn ($item): string => ($item->is_checked ? '1' : '0').($item->is_pinned ? '0' : '1').$item->name;
 
         return view('livewire.lists.show', [
@@ -53,8 +60,10 @@ class Preview extends Component
             'offers' => $offers->forList($list),
             'openCount' => $list->items->where('is_checked', false)->count(),
             'pickedCount' => $list->items->where('is_checked', true)->count(),
-            'looseItems' => $list->items->filter(fn ($item) => blank($item->group_name))->sortBy($sort)->values(),
-            'dishes' => $list->items->filter(fn ($item) => filled($item->group_name))->groupBy('group_name')->map(fn ($items) => $items->sortBy($sort)->values()),
+            'hidesBought' => $hidesBought,
+            'hiddenCount' => $hidesBought ? $list->items->where('is_checked', true)->count() : 0,
+            'looseItems' => $visible->filter(fn ($item) => blank($item->group_name))->sortBy($sort)->values(),
+            'dishes' => $visible->filter(fn ($item) => filled($item->group_name))->groupBy('group_name')->map(fn ($items) => $items->sortBy($sort)->values()),
             'polls' => $list->polls->sortByDesc('is_pinned')->values(),
             'activity' => ListActivity::events($list),
         ])->title($list->name);

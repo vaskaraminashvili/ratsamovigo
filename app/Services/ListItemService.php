@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\BoughtBehavior;
 use App\Models\ListItem;
 use App\Models\ShoppingList;
 use App\Models\User;
@@ -128,6 +129,17 @@ class ListItemService
     {
         $this->access->requireEdit($user, $list);
         $this->items->clearChecked($list);
+    }
+
+    public function reopenChecked(User $user, ShoppingList $list): void
+    {
+        $this->access->requireEdit($user, $list);
+
+        if ($list->bought_behavior !== BoughtBehavior::Hide) {
+            return;
+        }
+
+        $this->items->reopenChecked($list);
     }
 
     public function toggleGroup(User $user, ShoppingList $list, string $groupName): void

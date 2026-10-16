@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\BoughtBehavior;
 use App\Enums\CheckboxStyle;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
@@ -20,10 +21,12 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property string $accent_color
  * @property string $background_preset
  * @property CheckboxStyle $checkbox_style
+ * @property BoughtBehavior $bought_behavior
  * @property bool $show_emoji
  * @property bool $show_quantity
  * @property bool $show_likes
  * @property bool $show_author
+ * @property bool $fetch_best_price
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
@@ -35,15 +38,25 @@ use Spatie\MediaLibrary\InteractsWithMedia;
     'accent_color',
     'background_preset',
     'checkbox_style',
+    'bought_behavior',
     'show_emoji',
     'show_quantity',
     'show_likes',
     'show_author',
+    'fetch_best_price',
 ])]
 class ShoppingList extends Model implements HasMedia
 {
     use InteractsWithMedia;
     use SoftDeletes;
+
+    /**
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'bought_behavior' => 'strike',
+        'fetch_best_price' => false,
+    ];
 
     public function registerMediaCollections(): void
     {
@@ -80,10 +93,12 @@ class ShoppingList extends Model implements HasMedia
     {
         return [
             'checkbox_style' => CheckboxStyle::class,
+            'bought_behavior' => BoughtBehavior::class,
             'show_emoji' => 'boolean',
             'show_quantity' => 'boolean',
             'show_likes' => 'boolean',
             'show_author' => 'boolean',
+            'fetch_best_price' => 'boolean',
         ];
     }
 

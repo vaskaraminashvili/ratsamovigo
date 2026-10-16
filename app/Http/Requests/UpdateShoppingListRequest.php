@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\BoughtBehavior;
 use App\Enums\CheckboxStyle;
 use App\Support\ListAppearance;
 use Illuminate\Foundation\Http\FormRequest;
@@ -25,10 +26,12 @@ class UpdateShoppingListRequest extends FormRequest
             'accent_color' => ['required', Rule::in(ListAppearance::ACCENTS)],
             'background_preset' => ['required', Rule::in(array_keys(ListAppearance::PRESETS))],
             'checkbox_style' => ['required', Rule::enum(CheckboxStyle::class)],
+            'bought_behavior' => ['required', Rule::enum(BoughtBehavior::class)],
             'show_emoji' => ['boolean'],
             'show_quantity' => ['boolean'],
             'show_likes' => ['boolean'],
             'show_author' => ['boolean'],
+            'fetch_best_price' => ['boolean'],
             'background' => ['nullable', 'image', 'max:2048'],
         ];
     }

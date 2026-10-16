@@ -66,6 +66,18 @@ class ListItemRepository implements ListItemRepositoryContract
             });
     }
 
+    public function reopenChecked(ShoppingList $list): void
+    {
+        ListItem::query()
+            ->where('shopping_list_id', $list->id)
+            ->where('is_checked', true)
+            ->update([
+                'is_checked' => false,
+                'checked_by' => null,
+                'checked_at' => null,
+            ]);
+    }
+
     public function unpinAll(ShoppingList $list): void
     {
         ListItem::query()
