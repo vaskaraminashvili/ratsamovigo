@@ -1,41 +1,18 @@
-@php
-    $field = 'h-12 w-full rounded-2xl bg-phone px-3 text-base text-ink outline-none ring-1 ring-transparent focus:ring-2 focus:ring-marker';
-@endphp
-
 <x-settings.shell title="რჩეულები" subtitle="სიაში ერთი შეხებით">
     <div class="space-y-10">
             <section class="space-y-4">
                 <h2 class="font-sign text-xl font-bold">ნივთები</h2>
 
                 <form wire:submit="saveItem" class="space-y-3 rounded-[28px] bg-white p-4 text-ink">
-                    <label class="block text-sm text-bought">
-                        სახელი
-                        <input wire:model="itemName" class="{{ $field }} mt-1" maxlength="120" placeholder="ღვინო">
-                    </label>
-                    @error('itemName') <p class="text-sm text-wine">{{ $message }}</p> @enderror
-
-                    <label class="block text-sm text-bought">
-                        რაოდენობა
-                        <input wire:model="itemQuantity" class="{{ $field }} mt-1" maxlength="40" placeholder="1 ბოთლი">
-                    </label>
-                    @error('itemQuantity') <p class="text-sm text-wine">{{ $message }}</p> @enderror
-
-                    <label class="block text-sm text-bought">
-                        ემოჯი
-                        <input wire:model="itemEmoji" class="{{ $field }} mt-1" maxlength="8" placeholder="🍷">
-                    </label>
-                    @error('itemEmoji') <p class="text-sm text-wine">{{ $message }}</p> @enderror
-
-                    <label class="block text-sm text-bought">
-                        შენიშვნა
-                        <textarea wire:model="itemNote" rows="3" maxlength="200" class="mt-1 w-full rounded-2xl bg-phone px-3 py-3 text-base text-ink outline-none ring-1 ring-transparent focus:ring-2 focus:ring-marker" placeholder="საუკეთესო ბოთლი ამ მისამართზეა"></textarea>
-                    </label>
-                    @error('itemNote') <p class="text-sm text-wine">{{ $message }}</p> @enderror
+                    <x-input wire:model="itemName" label="სახელი" maxlength="120" placeholder="ღვინო" />
+                    <x-input wire:model="itemQuantity" label="რაოდენობა" maxlength="40" placeholder="1 ბოთლი" />
+                    <x-input wire:model="itemEmoji" label="ემოჯი" maxlength="8" placeholder="🍷" />
+                    <x-textarea wire:model="itemNote" label="შენიშვნა" rows="3" maxlength="200" placeholder="საუკეთესო ბოთლი ამ მისამართზეა" />
 
                     <div class="flex items-center gap-3">
-                        <button type="submit" class="slip-press h-12 rounded-full bg-ink px-5 text-sm font-medium text-white">
+                        <x-button submit lg round>
                             {{ $editingItemId ? 'შენახვა' : 'დამატება' }}
-                        </button>
+                        </x-button>
                         @if ($editingItemId)
                             <button type="button" wire:click="cancelItem" class="h-12 text-sm text-bought">გაუქმება</button>
                         @endif
@@ -70,28 +47,14 @@
                 <h2 class="font-sign text-xl font-bold">კერძები</h2>
 
                 <form wire:submit="saveDish" class="space-y-3 rounded-[28px] bg-white p-4 text-ink">
-                    <label class="block text-sm text-bought">
-                        კერძი
-                        <input wire:model="dishName" class="{{ $field }} mt-1" maxlength="120" placeholder="პასტა">
-                    </label>
-                    @error('dishName') <p class="text-sm text-wine">{{ $message }}</p> @enderror
-
-                    <label class="block text-sm text-bought">
-                        ემოჯი
-                        <input wire:model="dishEmoji" class="{{ $field }} mt-1" maxlength="8" placeholder="🍝">
-                    </label>
-                    @error('dishEmoji') <p class="text-sm text-wine">{{ $message }}</p> @enderror
-
-                    <label class="block text-sm text-bought">
-                        შენიშვნა
-                        <textarea wire:model="dishNote" rows="2" maxlength="200" class="mt-1 w-full rounded-2xl bg-phone px-3 py-3 text-base text-ink outline-none ring-1 ring-transparent focus:ring-2 focus:ring-marker" placeholder="შენიშვნა"></textarea>
-                    </label>
-                    @error('dishNote') <p class="text-sm text-wine">{{ $message }}</p> @enderror
+                    <x-input wire:model="dishName" label="კერძი" maxlength="120" placeholder="პასტა" />
+                    <x-input wire:model="dishEmoji" label="ემოჯი" maxlength="8" placeholder="🍝" />
+                    <x-textarea wire:model="dishNote" label="შენიშვნა" rows="2" maxlength="200" placeholder="შენიშვნა" />
 
                     <div class="flex items-center gap-3">
-                        <button type="submit" class="slip-press h-12 rounded-full bg-ink px-5 text-sm font-medium text-white">
+                        <x-button submit lg round>
                             {{ $editingDishId ? 'შენახვა' : 'კერძის დამატება' }}
-                        </button>
+                        </x-button>
                         @if ($editingDishId)
                             <button type="button" wire:click="cancelDish" class="h-12 text-sm text-bought">გაუქმება</button>
                         @endif
@@ -149,34 +112,15 @@
 
                         @if ($ingredientDishId === $dish->id)
                             <form wire:submit="saveIngredient({{ $dish->id }})" class="mt-3 space-y-3 border-t border-[#f1eef6] pt-3">
-                                <label class="block text-sm text-bought">
-                                    ინგრედიენტი
-                                    <input wire:model="ingredientName" class="{{ $field }} mt-1" maxlength="120" placeholder="სოუსი">
-                                </label>
-                                @error('ingredientName') <p class="text-sm text-wine">{{ $message }}</p> @enderror
-
-                                <label class="block text-sm text-bought">
-                                    რაოდენობა
-                                    <input wire:model="ingredientQuantity" class="{{ $field }} mt-1" maxlength="40" placeholder="1">
-                                </label>
-                                @error('ingredientQuantity') <p class="text-sm text-wine">{{ $message }}</p> @enderror
-
-                                <label class="block text-sm text-bought">
-                                    ემოჯი
-                                    <input wire:model="ingredientEmoji" class="{{ $field }} mt-1" maxlength="8" placeholder="🍅">
-                                </label>
-                                @error('ingredientEmoji') <p class="text-sm text-wine">{{ $message }}</p> @enderror
-
-                                <label class="block text-sm text-bought">
-                                    შენიშვნა
-                                    <input wire:model="ingredientNote" class="{{ $field }} mt-1" maxlength="200" placeholder="შენიშვნა">
-                                </label>
-                                @error('ingredientNote') <p class="text-sm text-wine">{{ $message }}</p> @enderror
+                                <x-input wire:model="ingredientName" label="ინგრედიენტი" maxlength="120" placeholder="სოუსი" />
+                                <x-input wire:model="ingredientQuantity" label="რაოდენობა" maxlength="40" placeholder="1" />
+                                <x-input wire:model="ingredientEmoji" label="ემოჯი" maxlength="8" placeholder="🍅" />
+                                <x-input wire:model="ingredientNote" label="შენიშვნა" maxlength="200" placeholder="შენიშვნა" />
 
                                 <div class="flex items-center gap-3">
-                                    <button type="submit" class="slip-press h-12 rounded-full bg-ink px-5 text-sm font-medium text-white">
+                                    <x-button submit lg round>
                                         {{ $editingIngredientId ? 'შენახვა' : 'ინგრედიენტის დამატება' }}
-                                    </button>
+                                    </x-button>
                                     <button type="button" wire:click="cancelIngredient" class="h-12 text-sm text-bought">გაუქმება</button>
                                 </div>
                             </form>

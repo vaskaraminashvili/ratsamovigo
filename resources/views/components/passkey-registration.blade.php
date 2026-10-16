@@ -75,17 +75,14 @@
 
     <template x-if="supported && showForm">
         <div class="space-y-3 rounded-2xl bg-phone p-4">
-            <label class="block text-sm font-medium text-marker">
-                სახელი
-                <input
-                    x-model="name"
-                    placeholder="მაგალითად, ტელეფონი"
-                    x-on:keydown.enter.prevent="register()"
-                    x-ref="passkeyNameInput"
-                    x-init="$nextTick(() => $refs.passkeyNameInput?.focus())"
-                    class="mt-2 h-12 w-full rounded-2xl bg-white px-4 text-base text-ink outline-none ring-1 ring-transparent focus:ring-2 focus:ring-marker"
-                >
-            </label>
+            <x-input
+                label="სახელი"
+                x-model="name"
+                placeholder="მაგალითად, ტელეფონი"
+                x-on:keydown.enter.prevent="register()"
+                x-ref="passkeyNameInput"
+                x-init="$nextTick(() => $refs.passkeyNameInput?.focus())"
+            />
             <p class="text-sm text-bought">სახელი გაგახსენებს, რომელ მოწყობილობას ეკუთვნის.</p>
             <p x-show="error" x-text="error" x-cloak class="text-sm text-wine"></p>
             <div class="flex items-center gap-3">

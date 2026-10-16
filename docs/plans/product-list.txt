@@ -1,0 +1,16 @@
+when user adding new item after 3-4 chars I want app to serch it with api and get the best price for and if users decides to add from list or user can just add just the text.
+I mean for example I want to add nabeglavi user an search it from here 
+https://tarifebi.ge/api/products.php?store_type=grocery&q=%E1%83%9C%E1%83%90%E1%83%91%E1%83%94%E1%83%A6%E1%83%9A%E1%83%90&limit=6&group=1&sort=relevance&page=1
+
+but user can desing if he wants to add it from here or just add simple text item. 
+if added from the api it will come with the price size of the bottle market like spar or etc. 
+if user does not want to choose from the appared list it will be just add as plain text thats it.
+
+
+
+
+
+user can choose what happens to bought product/item does it desepear or make strikethrough. 
+this could be useful for everyday list. 
+for example every evening before retorung to home I make a call and ask what to bring home. 
+this kind of list should exist alsows in this kind of list I want to be able to hide bought items. so for next evening when added second time I can check them again an buy it for example I can buy eggs today and tomorro also.

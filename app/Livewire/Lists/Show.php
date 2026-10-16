@@ -52,7 +52,7 @@ class Show extends Component
 
     public string $itemName = '';
 
-    public string $itemQuantity = '';
+    public ?string $itemQuantity = '';
 
     public string $itemUnit = 'ცალი';
 
@@ -75,11 +75,15 @@ class Show extends Component
 
     public string $listName = '';
 
+    public string $listEmoji = '';
+
     public string $accentColor = '#059669';
 
     public string $backgroundPreset = 'sage';
 
     public string $checkboxStyle = 'box';
+
+    public bool $showEmoji = true;
 
     public bool $showQuantity = true;
 
@@ -131,17 +135,6 @@ class Show extends Component
         $this->itemGroup = $group;
         $this->dishName = $group;
         $this->panel = 'create';
-    }
-
-    public function bumpQuantity(int $step): void
-    {
-        if ($this->itemQuantity !== '' && ! ctype_digit($this->itemQuantity)) {
-            return;
-        }
-
-        $current = $this->itemQuantity === '' ? 1 : (int) $this->itemQuantity;
-
-        $this->itemQuantity = (string) max(1, $current + $step);
     }
 
     public function editItem(int $itemId): void
@@ -212,20 +205,28 @@ class Show extends Component
 
     public function addPoll(PollService $polls): void
     {
+        $rules = (new StorePollRequest)->rules();
+        $messages = (new StorePollRequest)->messages();
         $validated = validator(
             [
-                'question' => $this->pollQuestion,
-                'options' => $this->pollOptions,
+                'pollQuestion' => $this->pollQuestion,
+                'pollOptions' => $this->pollOptions,
             ],
-            (new StorePollRequest)->rules(),
-            (new StorePollRequest)->messages(),
+            [
+                'pollQuestion' => $rules['question'],
+                'pollOptions' => $rules['options'],
+            ],
+            [
+                'pollQuestion.required' => $messages['question.required'],
+                'pollOptions.required' => $messages['options.required'],
+            ],
         )->validate();
 
         $polls->create(
             $this->user(),
             $this->shoppingList,
-            $validated['question'],
-            preg_split('/\r\n|\r|\n/', $validated['options']) ?: [],
+            $validated['pollQuestion'],
+            preg_split('/\r\n|\r|\n/', $validated['pollOptions']) ?: [],
         );
 
         $this->reset('pollQuestion', 'pollOptions');
@@ -268,6 +269,7 @@ class Show extends Component
 
     public function saveAppearance(ShoppingListService $lists): void
     {
+        $this->showEmoji = (bool) $this->showEmoji;
         $this->showQuantity = (bool) $this->showQuantity;
         $this->showLikes = (bool) $this->showLikes;
         $this->showAuthor = (bool) $this->showAuthor;
@@ -279,9 +281,11 @@ class Show extends Component
         $rules = (new UpdateShoppingListRequest)->rules();
         $validated = $this->validate([
             'listName' => $rules['name'],
+            'listEmoji' => $rules['emoji'],
             'accentColor' => $rules['accent_color'],
             'backgroundPreset' => $rules['background_preset'],
             'checkboxStyle' => $rules['checkbox_style'],
+            'showEmoji' => $rules['show_emoji'],
             'showQuantity' => $rules['show_quantity'],
             'showLikes' => $rules['show_likes'],
             'showAuthor' => $rules['show_author'],
@@ -296,9 +300,11 @@ class Show extends Component
 
         $lists->updateAppearance($this->user(), $this->shoppingList, [
             'name' => $validated['listName'],
+            'emoji' => $validated['listEmoji'],
             'accent_color' => $validated['accentColor'],
             'background_preset' => $validated['backgroundPreset'],
             'checkbox_style' => $validated['checkboxStyle'],
+            'show_emoji' => $validated['showEmoji'],
             'show_quantity' => $validated['showQuantity'],
             'show_likes' => $validated['showLikes'],
             'show_author' => $validated['showAuthor'],
@@ -578,7 +584,7 @@ class Show extends Component
 
     private function composedQuantity(): ?string
     {
-        $quantity = trim($this->itemQuantity);
+        $quantity = trim((string) $this->itemQuantity);
 
         if ($quantity === '') {
             return null;
@@ -615,23 +621,41 @@ class Show extends Component
      */
     private function validateItem(): array
     {
+        $rules = (new StoreListItemRequest)->rules();
+        $messages = (new StoreListItemRequest)->messages();
         $validated = validator(
             [
-                'name' => $this->itemName,
-                'quantity' => $this->itemQuantity,
-                'note' => $this->itemNote,
-                'photo' => $this->itemPhoto instanceof TemporaryUploadedFile ? $this->itemPhoto : null,
+                'itemName' => $this->itemName,
+                'itemQuantity' => (string) $this->itemQuantity,
+                'itemNote' => $this->itemNote,
+                'itemPhoto' => $this->itemPhoto instanceof TemporaryUploadedFile ? $this->itemPhoto : null,
             ],
-            (new StoreListItemRequest)->rules(),
-            (new StoreListItemRequest)->messages(),
+            [
+                'itemName' => $rules['name'],
+                'itemQuantity' => $rules['quantity'],
+                'itemNote' => $rules['note'],
+                'itemPhoto' => $rules['photo'],
+            ],
+            [
+                'itemName.required' => $messages['name.required'],
+                'itemPhoto.image' => $messages['photo.image'],
+                'itemPhoto.max' => $messages['photo.max'],
+            ],
         )->validate();
 
-        return $validated;
+        return [
+            'name' => $validated['itemName'],
+            'quantity' => $validated['itemQuantity'],
+            'emoji' => null,
+            'note' => $validated['itemNote'],
+        ];
     }
 
     private function fillAppearance(ShoppingList $list): void
     {
         $this->listName = $list->name;
+        $this->listEmoji = (string) $list->emoji;
+        $this->showEmoji = $list->show_emoji;
         $this->accentColor = in_array($list->accent_color, ListAppearance::ACCENTS, true)
             ? $list->accent_color
             : ListAppearance::ACCENTS[0];

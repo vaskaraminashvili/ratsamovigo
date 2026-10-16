@@ -81,9 +81,9 @@ return [
     ],
 
     'upload' => [
-        'placeholder' => 'Choose a file',
-        'size' => 'Size',
-        'upload' => 'Click here to upload',
+        'placeholder' => 'ფაილის არჩევა',
+        'size' => 'ზომა',
+        'upload' => 'აირჩიეთ ფაილი',
         'uploaded' => [
             'single' => ':count file sent',
             'multiple' => ':count files sent',

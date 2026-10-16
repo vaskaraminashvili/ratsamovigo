@@ -9,7 +9,9 @@ use App\Services\PollService;
 use App\Services\ShareLinkService;
 use App\Services\ShoppingListService;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
@@ -174,6 +176,37 @@ it('stores an item photo with the media library', function () {
         ->assertHasNoErrors();
 
     expect($list->items()->first()->getFirstMedia('photo'))->not->toBeNull();
+});
+
+it('keeps the quantity field after it is cleared', function () {
+    if (! Schema::hasColumn('shopping_lists', 'emoji')) {
+        Schema::table('shopping_lists', function (Blueprint $table) {
+            $table->string('emoji', 16)->nullable();
+            $table->boolean('show_emoji')->default(true);
+        });
+    }
+
+    if (! Schema::hasColumn('list_items', 'emoji')) {
+        Schema::table('list_items', function (Blueprint $table) {
+            $table->string('emoji', 16)->nullable();
+        });
+    }
+
+    $user = User::factory()->create();
+    $list = app(ShoppingListService::class)->create($user, ['name' => 'სასურსათო']);
+
+    $this->actingAs($user);
+
+    Livewire::test(Show::class, ['shoppingList' => $list])
+        ->set('itemQuantity', '2')
+        ->set('itemQuantity', null)
+        ->set('panel', 'create')
+        ->assertSet('itemQuantity', null)
+        ->set('itemName', 'პური')
+        ->call('addItem')
+        ->assertHasNoErrors();
+
+    expect($list->items()->first()->quantity)->toBeNull();
 });
 
 it('shows the list screen to the owner', function () {

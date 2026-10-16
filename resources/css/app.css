@@ -72,6 +72,18 @@
     --color-cream: #fff3ea;
     --color-lime: #d4f562;
     --color-coral: #ff8b6a;
+
+    --color-primary-50: #f6f3ff;
+    --color-primary-100: #ebe4fe;
+    --color-primary-200: #d8ccfd;
+    --color-primary-300: #bba8fb;
+    --color-primary-400: #9b7cf8;
+    --color-primary-500: #7b5cf6;
+    --color-primary-600: #6844e8;
+    --color-primary-700: #5632d4;
+    --color-primary-800: #4628ad;
+    --color-primary-900: #3a228c;
+    --color-primary-950: #241456;
 }
 
 @layer theme {
@@ -107,8 +119,7 @@ html[data-text-font='mzeqala'] {
 }
 
 .slip-ui :focus-visible {
-    outline: 2px solid var(--color-ink);
-    outline-offset: 3px;
+    outline: none;
 }
 
 @keyframes slip-rise {

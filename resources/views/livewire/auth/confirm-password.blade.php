@@ -23,28 +23,19 @@
         <form method="POST" action="{{ route('password.confirm.store') }}" class="space-y-4">
             @csrf
 
-            <div>
-                <label for="password" class="text-sm font-medium text-marker">პაროლი</label>
-                <div class="mt-2 flex items-center gap-2" x-data="{ show: false }">
-                    <input
-                        id="password"
-                        name="password"
-                        x-bind:type="show ? 'text' : 'password'"
-                        required
-                        autocomplete="current-password"
-                        placeholder="პაროლი"
-                        class="h-12 min-w-0 flex-1 rounded-2xl bg-white px-4 text-base text-ink outline-none ring-1 ring-transparent focus:ring-2 focus:ring-marker"
-                    >
-                    <button type="button" class="shrink-0 text-sm text-bought" x-on:click="show = !show" x-text="show ? 'დამალვა' : 'ჩვენება'"></button>
-                </div>
-                @error('password')
-                    <p class="mt-2 text-sm text-wine">{{ $message }}</p>
-                @enderror
-            </div>
+            <x-password
+                id="password"
+                name="password"
+                label="პაროლი"
+                :rules="[]"
+                required
+                autocomplete="current-password"
+                placeholder="პაროლი"
+            />
 
-            <button type="submit" class="slip-press h-12 w-full rounded-full bg-ink text-sm font-medium text-white" data-test="confirm-password-button">
+            <x-button submit lg round class="w-full" data-test="confirm-password-button">
                 დადასტურება
-            </button>
+            </x-button>
         </form>
     </div>
 </x-layouts::auth>
