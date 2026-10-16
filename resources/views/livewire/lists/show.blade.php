@@ -1,8 +1,6 @@
 @php
     $readonly = $readonly ?? false;
     $photo = $list->backgroundUrl();
-    $field =
-        'h-12 w-full rounded-2xl bg-phone px-3 text-base text-ink outline-none ring-1 ring-transparent focus:ring-2 focus:ring-marker';
     $members = $list->members;
     $extraMembers = max(0, $members->count() - 4);
 @endphp
@@ -305,10 +303,10 @@
                 <button type="button" wire:click="openPeople"
                     class="flex h-12 w-full items-center rounded-2xl bg-phone px-4 text-left">გაზიარება</button>
             @endif
-            <label class="flex h-12 items-center justify-between rounded-2xl bg-phone px-4">
+            <div class="flex h-12 items-center justify-between rounded-2xl bg-phone px-4">
                 <span>მხოლოდ ჩემი</span>
-                <input type="checkbox" wire:model.live="onlyMine" class="aisle-switch">
-            </label>
+                <x-toggle lg="lg" wire:model.live="onlyMine" />
+            </div>
             @if ($canEdit && $pickedCount > 0)
                 <button type="button" wire:click="clearChecked" class="h-12 w-full text-sm text-wine">მონიშნულის
                     გასუფთავება</button>
@@ -365,57 +363,29 @@
 
             @if ($panel === 'create' && $compose === 'poll')
                 <form wire:submit="addPoll" class="space-y-3">
-                    <input wire:model="pollQuestion" class="{{ $field }}" placeholder="რა ვიყიდოთ?">
-                    <textarea wire:model="pollOptions" rows="4"
-                        class="w-full rounded-2xl bg-phone px-3 py-3 text-ink outline-none focus:ring-2 focus:ring-marker"
-                        placeholder="კოლა&#10;ფანტა&#10;პეპსი"></textarea>
-                    @error('question')
-                        <p class="text-sm text-wine">{{ $message }}</p>
-                    @enderror
-                    @error('options')
-                        <p class="text-sm text-wine">{{ $message }}</p>
-                    @enderror
-                    <button type="submit"
-                        class="slip-press h-12 w-full rounded-full bg-ink font-medium text-white">გამოკითხვა</button>
+                    <x-input wire:model="pollQuestion" label="კითხვა" placeholder="რა ვიყიდოთ?" />
+                    <x-textarea wire:model="pollOptions" label="ვარიანტები" rows="4"
+                        placeholder="კოლა&#10;ფანტა&#10;პეპსი" />
+                    <x-button submit lg round class="w-full">გამოკითხვა</x-button>
                 </form>
             @else
                 <form wire:submit="{{ $panel === 'create' ? 'addItem' : 'saveItem' }}" class="space-y-4">
                     @if ($compose === 'dish' && $panel === 'create')
                         @if ($itemGroup === '')
-                            <label class="block text-sm text-bought">
-                                კერძი
-                                <input wire:model="dishName" class="{{ $field }} mt-1"
-                                    placeholder="პასტის საღამო">
-                            </label>
-                            @error('dishName')
-                                <p class="text-sm text-wine">{{ $message }}</p>
-                            @enderror
+                            <x-input wire:model="dishName" label="კერძი" placeholder="პასტის საღამო" />
                         @else
                             <p class="text-sm text-bought">კერძი <span
                                     class="font-medium text-ink">{{ $dishName }}</span></p>
                         @endif
                     @endif
 
-                    <label class="block text-sm text-bought">
-                        {{ $compose === 'dish' && $panel === 'create' ? 'ინგრედიენტი' : 'ნივთი' }}
-                        <input wire:model="itemName" class="{{ $field }} mt-1" placeholder="პამიდორი">
-                    </label>
-                    @error('name')
-                        <p class="text-sm text-wine">{{ $message }}</p>
-                    @enderror
+                    <x-input wire:model="itemName"
+                        :label="$compose === 'dish' && $panel === 'create' ? 'ინგრედიენტი' : 'ნივთი'"
+                        placeholder="პამიდორი" />
 
                     <div>
-                        <p class="text-sm text-bought">რაოდენობა</p>
-                        <div class="mt-1 flex items-center gap-2">
-                            <button type="button" wire:click="bumpQuantity(-1)"
-                                class="flex size-12 items-center justify-center rounded-2xl bg-phone text-lg"
-                                aria-label="ნაკლები">−</button>
-                            <input wire:model="itemQuantity" class="{{ $field }} text-center"
-                                placeholder="2">
-                            <button type="button" wire:click="bumpQuantity(1)"
-                                class="flex size-12 items-center justify-center rounded-2xl bg-phone text-lg"
-                                aria-label="მეტი">+</button>
-                        </div>
+                        <x-number wire:model="itemQuantity" label="რაოდენობა" min="1" centralized
+                            placeholder="2" />
                         <div class="mt-2 flex flex-wrap gap-2">
                             @foreach ($units as $unit => $label)
                                 <button type="button" wire:click="$set('itemUnit', '{{ $unit }}')"
@@ -429,30 +399,13 @@
                     </div>
 
                     @if ($panel === 'item')
-                        <label class="block text-sm text-bought">
-                            კერძი
-                            <input wire:model="itemGroup" class="{{ $field }} mt-1"
-                                placeholder="პასტის საღამო">
-                        </label>
-                        @error('itemGroup')
-                            <p class="text-sm text-wine">{{ $message }}</p>
-                        @enderror
+                        <x-input wire:model="itemGroup" label="კერძი" placeholder="პასტის საღამო" />
                     @endif
 
                     @if ($compose !== 'dish' || $panel === 'item')
-                        <label class="block text-sm text-bought">
-                            შენიშვნა
-                            <input wire:model="itemNote" class="{{ $field }} mt-1" placeholder="შენიშვნა">
-                        </label>
-                        <label class="block text-sm text-bought">
-                            ფოტო
-                            <input type="file" wire:model="itemPhoto" accept="image/*"
-                                class="mt-1 block w-full text-sm">
-                        </label>
-                        <p wire:loading wire:target="itemPhoto" class="text-sm text-bought">იტვირთება…</p>
-                        @error('photo')
-                            <p class="text-sm text-wine">{{ $message }}</p>
-                        @enderror
+                        <x-input wire:model="itemNote" label="შენიშვნა" placeholder="შენიშვნა" />
+                        <x-upload wire:model="itemPhoto" accept="image/*" label="ფოტო"
+                            placeholder="ფოტოს არჩევა" />
                     @endif
 
                     @if ($panel === 'item')
@@ -478,9 +431,9 @@
                         @endif
                     @endif
 
-                    <button type="submit" class="slip-press h-12 w-full rounded-full bg-ink font-medium text-white">
+                    <x-button submit lg round class="w-full">
                         {{ $panel === 'item' ? 'შენახვა' : ($compose === 'dish' ? 'ინგრედიენტის დამატება' : 'დამატება') }}
-                    </button>
+                    </x-button>
                 </form>
             @endif
         </div>
@@ -495,13 +448,8 @@
                 <button type="button" wire:click="$set('panel', '')"
                     class="font-medium text-marker">დახურვა</button>
             </div>
-            <input id="settings-name" wire:model="listName" class="{{ $field }}" placeholder="სახელი"
-                aria-label="სახელი">
-            @error('listName')
-                <p class="text-sm text-wine">{{ $message }}</p>
-            @enderror
-            <input id="settings-emoji" wire:model="listEmoji" class="{{ $field }}" placeholder="ემოჯი"
-                aria-label="ემოჯი">
+            <x-input id="settings-name" wire:model="listName" label="სახელი" placeholder="სახელი" />
+            <x-input id="settings-emoji" wire:model="listEmoji" label="ემოჯი" placeholder="ემოჯი" />
             <div class="flex flex-wrap gap-2">
                 @foreach ($accents as $accent)
                     <button type="button" wire:click="$set('accentColor', '{{ $accent }}')" aria-label="ფერი"
@@ -526,12 +474,8 @@
             @error('backgroundPreset')
                 <p class="text-sm text-wine">{{ $message }}</p>
             @enderror
-            <label class="block text-sm text-bought">
-                საკუთარი ფონი
-                <input type="file" wire:model="backgroundUpload" accept="image/*"
-                    class="mt-1 block w-full text-sm">
-            </label>
-            <p wire:loading wire:target="backgroundUpload" class="text-sm text-bought">იტვირთება…</p>
+            <x-upload wire:model="backgroundUpload" accept="image/*" label="საკუთარი ფონი"
+                placeholder="ფონის არჩევა" />
             @if ($preview = $this->pendingBackgroundUrl())
                 <img src="{{ $preview }}" alt="" class="h-28 w-full rounded-2xl object-cover">
             @elseif ($photo)
@@ -554,19 +498,19 @@
                         ])>{{ $style->label() }}</button>
                 @endforeach
             </div>
-            <label class="flex h-12 items-center justify-between"><span>ემოჯი</span><input type="checkbox"
-                    wire:model.live="showEmoji" class="aisle-switch"></label>
-            <label class="flex h-12 items-center justify-between"><span>რაოდენობა</span><input type="checkbox"
-                    wire:model.live="showQuantity" class="aisle-switch"></label>
-            <label class="flex h-12 items-center justify-between"><span>მოწონება</span><input type="checkbox"
-                    wire:model.live="showLikes" class="aisle-switch"></label>
-            <label class="flex h-12 items-center justify-between"><span>ავტორი</span><input type="checkbox"
-                    wire:model.live="showAuthor" class="aisle-switch"></label>
-            <button type="submit" wire:loading.attr="disabled" wire:target="backgroundUpload,saveAppearance"
-                class="slip-press h-12 w-full rounded-full bg-ink font-medium text-white disabled:opacity-50">
+            <div class="flex h-12 items-center justify-between"><span>ემოჯი</span><x-toggle lg="lg"
+                    wire:model.live="showEmoji" /></div>
+            <div class="flex h-12 items-center justify-between"><span>რაოდენობა</span><x-toggle lg="lg"
+                    wire:model.live="showQuantity" /></div>
+            <div class="flex h-12 items-center justify-between"><span>მოწონება</span><x-toggle lg="lg"
+                    wire:model.live="showLikes" /></div>
+            <div class="flex h-12 items-center justify-between"><span>ავტორი</span><x-toggle lg="lg"
+                    wire:model.live="showAuthor" /></div>
+            <x-button submit lg round class="w-full" wire:loading.attr="disabled"
+                wire:target="backgroundUpload,saveAppearance">
                 <span wire:loading.remove wire:target="saveAppearance">შენახვა</span>
                 <span wire:loading wire:target="saveAppearance">ინახება…</span>
-            </button>
+            </x-button>
         </form>
     @endif
 
@@ -604,8 +548,7 @@
                     <div x-data="{ copied: false, copy() { const field = this.$refs.link; const value = field.value; if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(value).then(() => { this.copied = true }).catch(() => { field.focus();
                                     field.select(); }); } else { field.focus();
                                 field.select(); } } }">
-                        <input x-ref="link" readonly value="{{ route('lists.view', $viewLink->token) }}"
-                            class="{{ $field }} text-xs">
+                        <x-input x-ref="link" readonly value="{{ route('lists.view', $viewLink->token) }}" />
                         <div class="mt-2 grid grid-cols-2 gap-2">
                             <button type="button" class="h-12 rounded-full bg-ink text-sm font-medium text-white"
                                 x-on:click="copy()" x-text="copied ? 'დაკოპირდა' : 'კოპირება'">კოპირება</button>
@@ -625,8 +568,7 @@
                     <div x-data="{ copied: false, copy() { const field = this.$refs.link; const value = field.value; if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(value).then(() => { this.copied = true }).catch(() => { field.focus();
                                     field.select(); }); } else { field.focus();
                                 field.select(); } } }">
-                        <input x-ref="link" readonly value="{{ route('lists.join', $editLink->token) }}"
-                            class="{{ $field }} text-xs">
+                        <x-input x-ref="link" readonly value="{{ route('lists.join', $editLink->token) }}" />
                         <div class="mt-2 grid grid-cols-2 gap-2">
                             <button type="button" class="h-12 rounded-full bg-ink text-sm font-medium text-white"
                                 x-on:click="copy()" x-text="copied ? 'დაკოპირდა' : 'კოპირება'">კოპირება</button>

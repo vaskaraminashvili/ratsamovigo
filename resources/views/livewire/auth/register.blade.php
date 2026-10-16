@@ -15,79 +15,52 @@
         <form method="POST" action="{{ route('register.store') }}" class="space-y-4">
             @csrf
 
-            <div>
-                <label for="name" class="text-sm font-medium text-marker">სახელი</label>
-                <input
-                    id="name"
-                    name="name"
-                    type="text"
-                    value="{{ old('name') }}"
-                    required
-                    autofocus
-                    autocomplete="name"
-                    placeholder="სახელი"
-                    class="mt-2 h-12 w-full rounded-2xl bg-white px-4 text-base text-ink outline-none ring-1 ring-transparent focus:ring-2 focus:ring-marker"
-                >
-                @error('name')
-                    <p class="mt-2 text-sm text-wine">{{ $message }}</p>
-                @enderror
-            </div>
+            <x-input
+                id="name"
+                name="name"
+                label="სახელი"
+                type="text"
+                :value="old('name')"
+                required
+                autofocus
+                autocomplete="name"
+                placeholder="სახელი"
+            />
 
-            <div>
-                <label for="email" class="text-sm font-medium text-marker">ელფოსტა</label>
-                <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value="{{ old('email') }}"
-                    required
-                    autocomplete="email"
-                    placeholder="you@email.com"
-                    class="mt-2 h-12 w-full rounded-2xl bg-white px-4 text-base text-ink outline-none ring-1 ring-transparent focus:ring-2 focus:ring-marker"
-                >
-                @error('email')
-                    <p class="mt-2 text-sm text-wine">{{ $message }}</p>
-                @enderror
-            </div>
+            <x-input
+                id="email"
+                name="email"
+                label="ელფოსტა"
+                type="email"
+                :value="old('email')"
+                required
+                autocomplete="email"
+                placeholder="you@email.com"
+            />
 
-            <div>
-                <label for="password" class="text-sm font-medium text-marker">პაროლი</label>
-                <div class="mt-2 flex items-center gap-2" x-data="{ show: false }">
-                    <input
-                        id="password"
-                        name="password"
-                        x-bind:type="show ? 'text' : 'password'"
-                        required
-                        autocomplete="new-password"
-                        placeholder="პაროლი"
-                        class="h-12 min-w-0 flex-1 rounded-2xl bg-white px-4 text-base text-ink outline-none ring-1 ring-transparent focus:ring-2 focus:ring-marker"
-                    >
-                    <button type="button" class="shrink-0 text-sm text-bought" x-on:click="show = !show" x-text="show ? 'დამალვა' : 'ჩვენება'"></button>
-                </div>
-                @error('password')
-                    <p class="mt-2 text-sm text-wine">{{ $message }}</p>
-                @enderror
-            </div>
+            <x-password
+                id="password"
+                name="password"
+                label="პაროლი"
+                :rules="[]"
+                required
+                autocomplete="new-password"
+                placeholder="პაროლი"
+            />
 
-            <div>
-                <label for="password_confirmation" class="text-sm font-medium text-marker">გაიმეორე პაროლი</label>
-                <div class="mt-2 flex items-center gap-2" x-data="{ show: false }">
-                    <input
-                        id="password_confirmation"
-                        name="password_confirmation"
-                        x-bind:type="show ? 'text' : 'password'"
-                        required
-                        autocomplete="new-password"
-                        placeholder="გაიმეორე პაროლი"
-                        class="h-12 min-w-0 flex-1 rounded-2xl bg-white px-4 text-base text-ink outline-none ring-1 ring-transparent focus:ring-2 focus:ring-marker"
-                    >
-                    <button type="button" class="shrink-0 text-sm text-bought" x-on:click="show = !show" x-text="show ? 'დამალვა' : 'ჩვენება'"></button>
-                </div>
-            </div>
+            <x-password
+                id="password_confirmation"
+                name="password_confirmation"
+                label="გაიმეორე პაროლი"
+                :rules="[]"
+                required
+                autocomplete="new-password"
+                placeholder="გაიმეორე პაროლი"
+            />
 
-            <button type="submit" class="slip-press h-12 w-full rounded-full bg-ink text-sm font-medium text-white" data-test="register-user-button">
+            <x-button submit lg round class="w-full" data-test="register-user-button">
                 შექმნა
-            </button>
+            </x-button>
         </form>
 
         <p class="mt-6 text-center text-sm text-bought">

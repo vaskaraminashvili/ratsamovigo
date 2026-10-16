@@ -6,6 +6,7 @@
         @include('partials.text-font')
         <title>{{ config('app.name') }}</title>
         @fonts
+        <tallstackui:script />
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="slip-ui min-h-dvh bg-floor font-slip text-ink antialiased">
@@ -268,30 +269,26 @@
                         <form method="POST" action="{{ route('login.store') }}" class="mt-6 space-y-4">
                             @csrf
                             <input type="hidden" name="intent" value="login">
-                            <label class="block text-[11px] font-bold tracking-[.12em] text-bought" for="login-email">
-                                ელფოსტა
-                                <input id="login-email" name="email" type="email" value="{{ old('intent') === 'login' ? old('email') : '' }}" required autocomplete="email" placeholder="you@email.com" class="mt-2 h-[52px] w-full rounded-2xl border border-rule bg-white px-4 text-sm font-semibold normal-case tracking-normal text-ink">
-                            </label>
+                            <x-input id="login-email" name="email" label="ელფოსტა" type="email" :value="old('intent') === 'login' ? old('email') : ''" required autocomplete="email" placeholder="you@email.com" invalidate />
                             @error('email')
                                 @if (old('intent') === 'login')
                                     <p class="text-sm text-wine">{{ $message }}</p>
                                 @endif
                             @enderror
-                            <label class="block text-[11px] font-bold tracking-[.12em] text-bought" for="login-password">
-                                <span class="flex items-center justify-between gap-3">
-                                    პაროლი
-                                    @if (Route::has('password.request'))
-                                        <a href="{{ route('password.request') }}" class="text-[11px] font-semibold normal-case tracking-normal text-marker">დაგავიწყდა?</a>
-                                    @endif
-                                </span>
-                                <input id="login-password" name="password" type="password" required autocomplete="current-password" placeholder="პაროლი" class="mt-2 h-[52px] w-full rounded-2xl border border-rule bg-white px-4 text-sm font-semibold normal-case tracking-normal text-ink">
-                            </label>
+                            <div>
+                                @if (Route::has('password.request'))
+                                    <div class="mb-1 flex justify-end">
+                                        <a href="{{ route('password.request') }}" class="text-[11px] font-semibold text-marker">დაგავიწყდა?</a>
+                                    </div>
+                                @endif
+                                <x-password id="login-password" name="password" label="პაროლი" :rules="[]" required autocomplete="current-password" placeholder="პაროლი" invalidate />
+                            </div>
                             @error('password')
                                 @if (old('intent') === 'login')
                                     <p class="text-sm text-wine">{{ $message }}</p>
                                 @endif
                             @enderror
-                            <button type="submit" class="slip-press h-14 w-full rounded-2xl bg-marker text-sm font-bold text-white shadow-[0_10px_24px_rgba(123,92,246,.25)]">შესვლა</button>
+                            <x-button submit lg round class="w-full">შესვლა</x-button>
                         </form>
                         @if (Route::has('register'))
                             <p class="mt-5 text-center text-xs font-medium text-bought">
@@ -316,36 +313,21 @@
                             <form method="POST" action="{{ route('register.store') }}" class="mt-6 space-y-4">
                                 @csrf
                                 <input type="hidden" name="intent" value="register">
-                                <label class="block text-[11px] font-bold tracking-[.12em] text-bought" for="register-name">
-                                    სახელი
-                                    <input id="register-name" name="name" type="text" value="{{ old('intent') === 'register' ? old('name') : '' }}" required autocomplete="name" placeholder="სახელი" class="mt-2 h-[52px] w-full rounded-2xl border border-rule bg-white px-4 text-sm font-semibold normal-case tracking-normal text-ink">
-                                </label>
-                                @error('name')
-                                    <p class="text-sm text-wine">{{ $message }}</p>
-                                @enderror
-                                <label class="block text-[11px] font-bold tracking-[.12em] text-bought" for="register-email">
-                                    ელფოსტა
-                                    <input id="register-email" name="email" type="email" value="{{ old('intent') === 'register' ? old('email') : '' }}" required autocomplete="email" placeholder="you@email.com" class="mt-2 h-[52px] w-full rounded-2xl border border-rule bg-white px-4 text-sm font-semibold normal-case tracking-normal text-ink">
-                                </label>
+                                <x-input id="register-name" name="name" label="სახელი" type="text" :value="old('intent') === 'register' ? old('name') : ''" required autocomplete="name" placeholder="სახელი" />
+                                <x-input id="register-email" name="email" label="ელფოსტა" type="email" :value="old('intent') === 'register' ? old('email') : ''" required autocomplete="email" placeholder="you@email.com" invalidate />
                                 @error('email')
                                     @if (old('intent') === 'register')
                                         <p class="text-sm text-wine">{{ $message }}</p>
                                     @endif
                                 @enderror
-                                <label class="block text-[11px] font-bold tracking-[.12em] text-bought" for="register-password">
-                                    პაროლი
-                                    <input id="register-password" name="password" type="password" required autocomplete="new-password" placeholder="მინიმუმ 8 სიმბოლო" class="mt-2 h-[52px] w-full rounded-2xl border border-rule bg-white px-4 text-sm font-semibold normal-case tracking-normal text-ink">
-                                </label>
+                                <x-password id="register-password" name="password" label="პაროლი" :rules="[]" required autocomplete="new-password" placeholder="მინიმუმ 8 სიმბოლო" invalidate />
                                 @error('password')
                                     @if (old('intent') === 'register')
                                         <p class="text-sm text-wine">{{ $message }}</p>
                                     @endif
                                 @enderror
-                                <label class="block text-[11px] font-bold tracking-[.12em] text-bought" for="register-password-confirmation">
-                                    გაიმეორე პაროლი
-                                    <input id="register-password-confirmation" name="password_confirmation" type="password" required autocomplete="new-password" placeholder="გაიმეორე პაროლი" class="mt-2 h-[52px] w-full rounded-2xl border border-rule bg-white px-4 text-sm font-semibold normal-case tracking-normal text-ink">
-                                </label>
-                                <button type="submit" class="slip-press h-14 w-full rounded-2xl bg-marker text-sm font-bold text-white shadow-[0_10px_24px_rgba(123,92,246,.25)]">უფასო ანგარიშის შექმნა</button>
+                                <x-password id="register-password-confirmation" name="password_confirmation" label="გაიმეორე პაროლი" :rules="[]" required autocomplete="new-password" placeholder="გაიმეორე პაროლი" />
+                                <x-button submit lg round class="w-full">უფასო ანგარიშის შექმნა</x-button>
                             </form>
                             @if (Route::has('login'))
                                 <p class="mt-5 text-center text-xs font-medium text-bought">

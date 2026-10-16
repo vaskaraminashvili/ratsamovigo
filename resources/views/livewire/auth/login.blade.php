@@ -21,56 +21,40 @@
         <form method="POST" action="{{ route('login.store') }}" class="space-y-4">
             @csrf
 
-            <div>
-                <label for="email" class="text-sm font-medium text-marker">ელფოსტა</label>
-                <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value="{{ old('email') }}"
-                    required
-                    autofocus
-                    autocomplete="email"
-                    placeholder="you@email.com"
-                    class="mt-2 h-12 w-full rounded-2xl bg-white px-4 text-base text-ink outline-none ring-1 ring-transparent focus:ring-2 focus:ring-marker"
-                >
-                @error('email')
-                    <p class="mt-2 text-sm text-wine">{{ $message }}</p>
-                @enderror
-            </div>
+            <x-input
+                id="email"
+                name="email"
+                label="ელფოსტა"
+                type="email"
+                :value="old('email')"
+                required
+                autofocus
+                autocomplete="email"
+                placeholder="you@email.com"
+            />
 
             <div>
-                <div class="flex items-center justify-between gap-3">
-                    <label for="password" class="text-sm font-medium text-marker">პაროლი</label>
-                    @if (Route::has('password.request'))
+                @if (Route::has('password.request'))
+                    <div class="mb-1 flex justify-end">
                         <a href="{{ route('password.request') }}" class="text-sm text-bought" wire:navigate>დაგავიწყდა?</a>
-                    @endif
-                </div>
-                <div class="mt-2 flex items-center gap-2" x-data="{ show: false }">
-                    <input
-                        id="password"
-                        name="password"
-                        x-bind:type="show ? 'text' : 'password'"
-                        required
-                        autocomplete="current-password"
-                        placeholder="პაროლი"
-                        class="h-12 min-w-0 flex-1 rounded-2xl bg-white px-4 text-base text-ink outline-none ring-1 ring-transparent focus:ring-2 focus:ring-marker"
-                    >
-                    <button type="button" class="shrink-0 text-sm text-bought" x-on:click="show = !show" x-text="show ? 'დამალვა' : 'ჩვენება'"></button>
-                </div>
-                @error('password')
-                    <p class="mt-2 text-sm text-wine">{{ $message }}</p>
-                @enderror
+                    </div>
+                @endif
+                <x-password
+                    id="password"
+                    name="password"
+                    label="პაროლი"
+                    :rules="[]"
+                    required
+                    autocomplete="current-password"
+                    placeholder="პაროლი"
+                />
             </div>
 
-            <label class="flex items-center gap-2 text-sm text-ink">
-                <input type="checkbox" name="remember" value="1" @checked(old('remember')) class="size-4 rounded">
-                დამიმახსოვრე
-            </label>
+            <x-checkbox name="remember" value="1" label="დამიმახსოვრე" :checked="(bool) old('remember')" />
 
-            <button type="submit" class="slip-press h-12 w-full rounded-full bg-ink text-sm font-medium text-white" data-test="login-button">
+            <x-button submit lg round class="w-full" data-test="login-button">
                 შესვლა
-            </button>
+            </x-button>
         </form>
 
         <p class="mt-6 text-center text-sm text-bought">

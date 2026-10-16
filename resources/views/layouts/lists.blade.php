@@ -1,17 +1,13 @@
 <!DOCTYPE html>
-<html lang="ka">
+<html lang="ka" x-data="tallstackui_darkTheme()">
     <head>
         @include('partials.head')
     </head>
-    <body class="slip-ui min-h-dvh bg-floor font-slip text-ink antialiased">
+    <body class="slip-ui min-h-dvh bg-floor font-slip text-ink antialiased" x-bind:class="{ 'dark': darkTheme }">
         {{ $slot }}
 
         @persist('toast')
-            <flux:toast.group>
-                <flux:toast />
-            </flux:toast.group>
+            <x-toast />
         @endpersist
-
-        @fluxScripts
     </body>
 </html>

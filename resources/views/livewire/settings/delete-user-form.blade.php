@@ -14,17 +14,11 @@
             </div>
             <p class="text-sm leading-relaxed text-bought">წასაშლელად ჩაწერე პაროლი. ამის შემდეგ ანგარიშზე დაბრუნება ვეღარ მოხერხდება.</p>
 
-            <div>
-                <label for="delete-password" class="text-sm font-medium text-marker">პაროლი</label>
-                <input id="delete-password" wire:model="password" type="password" autocomplete="current-password" class="mt-2 h-12 w-full rounded-2xl bg-phone px-4 text-base text-ink outline-none ring-1 ring-transparent focus:ring-2 focus:ring-marker">
-                @error('password')
-                    <p class="mt-2 text-sm text-wine">{{ $message }}</p>
-                @enderror
-            </div>
+            <x-password id="delete-password" wire:model="password" label="პაროლი" :rules="[]" autocomplete="current-password" />
 
             <div class="grid grid-cols-2 gap-2">
                 <button type="button" class="h-12 rounded-full bg-phone text-sm" x-on:click="open = false">გაუქმება</button>
-                <button type="submit" class="slip-press h-12 rounded-full bg-wine text-sm font-medium text-white">წაშლა</button>
+                <x-button submit lg round color="rose">წაშლა</x-button>
             </div>
         </form>
     </div>

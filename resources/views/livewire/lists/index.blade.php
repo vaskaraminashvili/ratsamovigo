@@ -12,17 +12,12 @@
 
     <form wire:submit="createList" class="mx-5 mt-3 rounded-[28px] bg-white p-4">
         <p class="text-sm font-medium text-marker">ახალი სია</p>
-        <div class="mt-3 flex items-center gap-2">
-
-            <label class="sr-only" for="list-name">სიის სახელი</label>
-            <input id="list-name" wire:model="name" type="text" placeholder="სახლის სია"
-                class="h-12 min-w-0 flex-1 rounded-2xl bg-phone px-4 text-base">
-            <button type="submit"
-                class="slip-press h-12 shrink-0 rounded-full bg-ink px-4 text-sm font-medium text-white">შექმნა</button>
+        <div class="mt-3 flex items-end gap-2">
+            <div class="min-w-0 flex-1">
+                <x-input id="list-name" wire:model="name" placeholder="სახლის სია" aria-label="სიის სახელი" />
+            </div>
+            <x-button submit lg round>შექმნა</x-button>
         </div>
-        @error('name')
-            <p class="mt-2 text-sm text-wine">{{ $message }}</p>
-        @enderror
     </form>
 
     <div class="slip-rise min-h-0 flex-1 space-y-3 overflow-y-auto px-5 py-4">

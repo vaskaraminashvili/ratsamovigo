@@ -1,48 +1,15 @@
-@php
-    $field = 'mt-2 h-12 w-full rounded-2xl bg-phone px-4 text-base text-ink outline-none ring-1 ring-transparent focus:ring-2 focus:ring-marker';
-@endphp
-
 <x-settings.shell title="უსაფრთხოება" subtitle="პაროლი, კოდი და პასკი">
     <form method="POST" wire:submit="updatePassword" class="space-y-4 rounded-[28px] bg-white p-4">
         <h2 class="font-sign text-xl font-bold">პაროლის შეცვლა</h2>
 
-        <div x-data="{ show: false }">
-            <div class="flex items-center justify-between gap-3">
-                <label for="current_password" class="text-sm font-medium text-marker">ახლანდელი პაროლი</label>
-                <button type="button" class="text-sm text-bought" x-on:click="show = !show" x-text="show ? 'დამალვა' : 'ჩვენება'"></button>
-            </div>
-            <input id="current_password" wire:model="current_password" x-bind:type="show ? 'text' : 'password'" required autocomplete="current-password" class="{{ $field }}">
-            @error('current_password')
-                <p class="mt-2 text-sm text-wine">{{ $message }}</p>
-            @enderror
-        </div>
+        <x-password id="current_password" wire:model="current_password" label="ახლანდელი პაროლი" :rules="[]" required autocomplete="current-password" />
+        <x-password id="password" wire:model="password" label="ახალი პაროლი" :rules="[]" required autocomplete="new-password" passwordrules="{{ \Illuminate\Validation\Rules\Password::defaults()->toPasswordRulesString() }}" />
+        <x-password id="password_confirmation" wire:model="password_confirmation" label="გაიმეორე პაროლი" :rules="[]" required autocomplete="new-password" passwordrules="{{ \Illuminate\Validation\Rules\Password::defaults()->toPasswordRulesString() }}" />
 
-        <div x-data="{ show: false }">
-            <div class="flex items-center justify-between gap-3">
-                <label for="password" class="text-sm font-medium text-marker">ახალი პაროლი</label>
-                <button type="button" class="text-sm text-bought" x-on:click="show = !show" x-text="show ? 'დამალვა' : 'ჩვენება'"></button>
-            </div>
-            <input id="password" wire:model="password" x-bind:type="show ? 'text' : 'password'" required autocomplete="new-password" passwordrules="{{ \Illuminate\Validation\Rules\Password::defaults()->toPasswordRulesString() }}" class="{{ $field }}">
-            @error('password')
-                <p class="mt-2 text-sm text-wine">{{ $message }}</p>
-            @enderror
-        </div>
-
-        <div x-data="{ show: false }">
-            <div class="flex items-center justify-between gap-3">
-                <label for="password_confirmation" class="text-sm font-medium text-marker">გაიმეორე პაროლი</label>
-                <button type="button" class="text-sm text-bought" x-on:click="show = !show" x-text="show ? 'დამალვა' : 'ჩვენება'"></button>
-            </div>
-            <input id="password_confirmation" wire:model="password_confirmation" x-bind:type="show ? 'text' : 'password'" required autocomplete="new-password" passwordrules="{{ \Illuminate\Validation\Rules\Password::defaults()->toPasswordRulesString() }}" class="{{ $field }}">
-            @error('password_confirmation')
-                <p class="mt-2 text-sm text-wine">{{ $message }}</p>
-            @enderror
-        </div>
-
-        <button type="submit" data-test="update-password-button" class="slip-press h-12 w-full rounded-full bg-ink text-sm font-medium text-white">
+        <x-button submit lg round class="w-full" data-test="update-password-button">
             <span wire:loading.remove wire:target="updatePassword">შენახვა</span>
             <span wire:loading wire:target="updatePassword">ინახება…</span>
-        </button>
+        </x-button>
     </form>
 
     @if ($canManageTwoFactor)
@@ -104,11 +71,7 @@
 
             @if ($showVerificationStep)
                 <div x-data x-init="$nextTick(() => $el.querySelector('input')?.focus())">
-                    <label for="two-factor-code" class="text-sm font-medium text-marker">კოდი</label>
-                    <input id="two-factor-code" wire:model="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" class="mt-2 h-14 w-full rounded-2xl bg-phone text-center text-2xl tracking-[0.4em] text-ink outline-none ring-1 ring-transparent focus:ring-2 focus:ring-marker">
-                    @error('code')
-                        <p class="mt-2 text-sm text-wine">{{ $message }}</p>
-                    @enderror
+                    <x-pin id="two-factor-code" wire:model="code" label="კოდი" length="6" numbers autocomplete="one-time-code" />
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <button type="button" wire:click="resetVerification" class="h-12 rounded-full bg-phone text-sm">უკან</button>
@@ -148,7 +111,9 @@
                         }
                     }"
                 >
-                    <input type="text" readonly value="{{ $manualSetupKey }}" class="h-12 min-w-0 flex-1 rounded-2xl bg-phone px-4 text-sm text-ink">
+                    <div class="min-w-0 flex-1">
+                        <x-input readonly value="{{ $manualSetupKey }}" />
+                    </div>
                     <button type="button" class="h-12 shrink-0 rounded-full bg-phone px-4 text-sm" x-on:click="copy()" x-text="copied ? 'დაკოპირდა' : 'კოპირება'">კოპირება</button>
                 </div>
             @endif

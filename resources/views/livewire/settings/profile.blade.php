@@ -1,5 +1,4 @@
 @php
-    $field = 'mt-2 h-12 w-full rounded-2xl bg-phone px-4 text-base text-ink outline-none ring-1 ring-transparent focus:ring-2 focus:ring-marker';
     $tint = \App\Support\ListAppearance::tint((string) auth()->id());
 @endphp
 
@@ -13,20 +12,10 @@
     </div>
 
     <form wire:submit="updateProfileInformation" class="mt-4 space-y-4 rounded-[28px] bg-white p-4">
-        <div>
-            <label for="name" class="text-sm font-medium text-marker">სახელი</label>
-            <input id="name" wire:model="name" type="text" required autofocus autocomplete="name" class="{{ $field }}">
-            @error('name')
-                <p class="mt-2 text-sm text-wine">{{ $message }}</p>
-            @enderror
-        </div>
+        <x-input id="name" wire:model="name" label="სახელი" type="text" required autofocus autocomplete="name" />
 
         <div>
-            <label for="email" class="text-sm font-medium text-marker">ელფოსტა</label>
-            <input id="email" wire:model="email" type="email" required autocomplete="email" class="{{ $field }}">
-            @error('email')
-                <p class="mt-2 text-sm text-wine">{{ $message }}</p>
-            @enderror
+            <x-input id="email" wire:model="email" label="ელფოსტა" type="email" required autocomplete="email" />
 
             @if ($this->hasUnverifiedEmail)
                 <p class="mt-3 text-sm leading-relaxed text-bought">
@@ -36,10 +25,10 @@
             @endif
         </div>
 
-        <button type="submit" class="slip-press h-12 w-full rounded-full bg-ink text-sm font-medium text-white">
+        <x-button submit lg round class="w-full">
             <span wire:loading.remove wire:target="updateProfileInformation">შენახვა</span>
             <span wire:loading wire:target="updateProfileInformation">ინახება…</span>
-        </button>
+        </x-button>
     </form>
 
     @if ($this->showDeleteUser)

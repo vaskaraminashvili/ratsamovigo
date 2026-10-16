@@ -73,9 +73,9 @@
             @else
                 <div class="divide-y divide-[#f1eef6]">
                     @foreach ($pickingDish->items as $ingredient)
-                        <label wire:key="pick-ingredient-{{ $ingredient->id }}" class="flex items-start gap-3 py-3">
-                            <input type="checkbox" value="{{ $ingredient->id }}" wire:model="selectedIngredientIds" class="mt-1 size-5 accent-marker">
-                            <span class="min-w-0">
+                        <div wire:key="pick-ingredient-{{ $ingredient->id }}" class="flex items-start gap-3 py-3">
+                            <x-checkbox id="pick-ingredient-{{ $ingredient->id }}" wire:model="selectedIngredientIds" :value="$ingredient->id" />
+                            <label for="pick-ingredient-{{ $ingredient->id }}" class="min-w-0">
                                 <span class="block font-medium">
                                     @if ($ingredient->emoji)
                                         <span class="mr-1">{{ $ingredient->emoji }}</span>
@@ -88,8 +88,8 @@
                                 @if ($ingredient->note)
                                     <span class="mt-0.5 line-clamp-2 block text-sm text-bought">{{ $ingredient->note }}</span>
                                 @endif
-                            </span>
-                        </label>
+                            </label>
+                        </div>
                     @endforeach
                 </div>
                 @error('ingredient_ids') <p class="mt-2 text-sm text-wine">{{ $message }}</p> @enderror

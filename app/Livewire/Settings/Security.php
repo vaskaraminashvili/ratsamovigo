@@ -4,7 +4,6 @@ namespace App\Livewire\Settings;
 
 use App\Concerns\PasswordValidationRules;
 use Exception;
-use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Actions\ConfirmTwoFactorAuthentication;
@@ -19,11 +18,13 @@ use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use TallStackUi\Traits\Interactions;
 
 #[Layout('layouts.lists')]
 #[Title('უსაფრთხოება')]
 class Security extends Component
 {
+    use Interactions;
     use PasswordValidationRules;
 
     public string $current_password = '';
@@ -116,7 +117,7 @@ class Security extends Component
 
         $this->reset('current_password', 'password', 'password_confirmation');
 
-        Flux::toast(variant: 'success', text: 'პაროლი შეინახა.');
+        $this->toast()->success('პაროლი შეინახა.')->send();
     }
 
     /**

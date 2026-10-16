@@ -3,18 +3,19 @@
 namespace App\Livewire\Settings;
 
 use App\Concerns\ProfileValidationRules;
-use Flux\Flux;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use TallStackUi\Traits\Interactions;
 
 #[Layout('layouts.lists')]
 #[Title('პროფილი')]
 class Profile extends Component
 {
+    use Interactions;
     use ProfileValidationRules;
 
     public string $name = '';
@@ -47,7 +48,7 @@ class Profile extends Component
 
         $user->save();
 
-        Flux::toast(variant: 'success', text: 'პროფილი შეინახა.');
+        $this->toast()->success('პროფილი შეინახა.')->send();
     }
 
     /**
@@ -65,7 +66,7 @@ class Profile extends Component
 
         $user->sendEmailVerificationNotification();
 
-        Flux::toast(text: 'დამადასტურებელი ბმული ელფოსტაზე გაიგზავნა.');
+        $this->toast()->info('დამადასტურებელი ბმული ელფოსტაზე გაიგზავნა.')->send();
     }
 
     #[Computed]

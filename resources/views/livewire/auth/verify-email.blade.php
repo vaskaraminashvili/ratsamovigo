@@ -1,28 +1,28 @@
 <x-layouts::auth :title="__('Email verification')">
     <div class="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-5 py-8">
-        <flux:text class="text-center">
+        <p class="text-center text-sm text-ink">
             {{ __('Please verify your email address by clicking on the link we just emailed to you.') }}
-        </flux:text>
+        </p>
 
         @if (session('status') == 'verification-link-sent')
-            <flux:text class="text-center font-medium !dark:text-green-400 !text-green-600">
+            <p class="text-center text-sm font-medium text-green-600 dark:text-green-400">
                 {{ __('A new verification link has been sent to the email address you provided during registration.') }}
-            </flux:text>
+            </p>
         @endif
 
         <div class="flex flex-col items-center justify-between space-y-3">
-            <form method="POST" action="{{ route('verification.send') }}">
+            <form method="POST" action="{{ route('verification.send') }}" class="w-full">
                 @csrf
-                <flux:button type="submit" variant="primary" class="w-full">
+                <x-button submit class="w-full">
                     {{ __('Resend verification email') }}
-                </flux:button>
+                </x-button>
             </form>
 
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
-                <flux:button variant="ghost" type="submit" class="text-sm cursor-pointer" data-test="logout-button">
+                <x-button submit flat class="cursor-pointer text-sm" data-test="logout-button">
                     {{ __('Log out') }}
-                </flux:button>
+                </x-button>
             </form>
         </div>
     </div>
