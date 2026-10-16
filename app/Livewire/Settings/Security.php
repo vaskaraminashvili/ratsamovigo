@@ -14,12 +14,14 @@ use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
 use Laravel\Passkeys\Actions\DeletePasskey;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
-#[Title('Security settings')]
+#[Layout('layouts.lists')]
+#[Title('უსაფრთხოება')]
 class Security extends Component
 {
     use PasswordValidationRules;
@@ -114,7 +116,7 @@ class Security extends Component
 
         $this->reset('current_password', 'password', 'password_confirmation');
 
-        Flux::toast(variant: 'success', text: __('Password updated.'));
+        Flux::toast(variant: 'success', text: 'პაროლი შეინახა.');
     }
 
     /**
@@ -203,7 +205,7 @@ class Security extends Component
             $this->qrCodeSvg = $user?->twoFactorQrCodeSvg();
             $this->manualSetupKey = decrypt($user->two_factor_secret);
         } catch (Exception) {
-            $this->addError('setupData', 'Failed to fetch setup data.');
+            $this->addError('setupData', 'კოდის ჩატვირთვა ვერ მოხერხდა.');
 
             $this->reset('qrCodeSvg', 'manualSetupKey');
         }
@@ -289,24 +291,24 @@ class Security extends Component
     {
         if ($this->twoFactorEnabled) {
             return [
-                'title' => __('Two-factor authentication enabled'),
-                'description' => __('Two-factor authentication is now enabled. Scan the QR code or enter the setup key in your authenticator app.'),
-                'buttonText' => __('Close'),
+                'title' => 'დაცვა ჩართულია',
+                'description' => 'დაასკანერე QR კოდი ან ჩაწერე გასაღები ავთენტიფიკატორის აპში.',
+                'buttonText' => 'დახურვა',
             ];
         }
 
         if ($this->showVerificationStep) {
             return [
-                'title' => __('Verify authentication code'),
-                'description' => __('Enter the 6-digit code from your authenticator app.'),
-                'buttonText' => __('Continue'),
+                'title' => 'კოდის დადასტურება',
+                'description' => 'ჩაწერე 6-ნიშნა კოდი ავთენტიფიკატორის აპიდან.',
+                'buttonText' => 'გაგრძელება',
             ];
         }
 
         return [
-            'title' => __('Enable two-factor authentication'),
-            'description' => __('To finish enabling two-factor authentication, scan the QR code or enter the setup key in your authenticator app.'),
-            'buttonText' => __('Continue'),
+            'title' => 'ორფაქტორიანი დაცვა',
+            'description' => 'დასასრულებლად დაასკანერე QR კოდი ან ჩაწერე გასაღები ავთენტიფიკატორის აპში.',
+            'buttonText' => 'გაგრძელება',
         ];
     }
 }

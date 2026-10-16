@@ -1,34 +1,31 @@
-<section class="mt-10 space-y-6">
-    <div class="relative mb-5">
-        <flux:heading>{{ __('Delete account') }}</flux:heading>
-        <flux:subheading>{{ __('Delete your account and all of its resources') }}</flux:subheading>
-    </div>
+<div x-data="{ open: {{ $errors->has('password') ? 'true' : 'false' }} }">
+    <section class="mt-4 rounded-[28px] bg-white p-4">
+        <h2 class="font-sign text-xl font-bold">ანგარიშის წაშლა</h2>
+        <p class="mt-1 text-sm leading-relaxed text-bought">ანგარიში და მასთან დაკავშირებული მონაცემები სამუდამოდ წაიშლება.</p>
+        <button type="button" class="mt-4 text-sm text-wine" x-on:click="open = true">ანგარიშის წაშლა</button>
+    </section>
 
-    <flux:modal.trigger name="confirm-user-deletion">
-        <flux:button variant="danger" x-data="" x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')">
-            {{ __('Delete account') }}
-        </flux:button>
-    </flux:modal.trigger>
+    <div x-show="open" x-cloak class="slip-scrim fixed inset-0 z-30 bg-ink/45" x-on:click="open = false"></div>
+    <div x-show="open" x-cloak class="slip-up fixed inset-x-0 bottom-0 z-40 mx-auto max-h-[92dvh] w-full max-w-[430px] overflow-y-auto rounded-t-[28px] bg-white px-5 py-5 text-ink">
+        <form wire:submit="deleteUser" class="space-y-4">
+            <div class="flex items-center justify-between">
+                <h2 class="font-sign text-xl font-bold">ანგარიში წაიშალოს?</h2>
+                <button type="button" class="font-medium text-marker" x-on:click="open = false">დახურვა</button>
+            </div>
+            <p class="text-sm leading-relaxed text-bought">წასაშლელად ჩაწერე პაროლი. ამის შემდეგ ანგარიშზე დაბრუნება ვეღარ მოხერხდება.</p>
 
-    <flux:modal name="confirm-user-deletion" :show="$errors->isNotEmpty()" focusable class="max-w-lg">
-        <form method="POST" wire:submit="deleteUser" class="space-y-6">
             <div>
-                <flux:heading size="lg">{{ __('Are you sure you want to delete your account?') }}</flux:heading>
-
-                <flux:subheading>
-                    {{ __('Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.') }}
-                </flux:subheading>
+                <label for="delete-password" class="text-sm font-medium text-marker">პაროლი</label>
+                <input id="delete-password" wire:model="password" type="password" autocomplete="current-password" class="mt-2 h-12 w-full rounded-2xl bg-phone px-4 text-base text-ink outline-none ring-1 ring-transparent focus:ring-2 focus:ring-marker">
+                @error('password')
+                    <p class="mt-2 text-sm text-wine">{{ $message }}</p>
+                @enderror
             </div>
 
-            <flux:input wire:model="password" :label="__('Password')" type="password" viewable />
-
-            <div class="flex justify-end space-x-2 rtl:space-x-reverse">
-                <flux:modal.close>
-                    <flux:button variant="filled">{{ __('Cancel') }}</flux:button>
-                </flux:modal.close>
-
-                <flux:button variant="danger" type="submit">{{ __('Delete account') }}</flux:button>
+            <div class="grid grid-cols-2 gap-2">
+                <button type="button" class="h-12 rounded-full bg-phone text-sm" x-on:click="open = false">გაუქმება</button>
+                <button type="submit" class="slip-press h-12 rounded-full bg-wine text-sm font-medium text-white">წაშლა</button>
             </div>
         </form>
-    </flux:modal>
-</section>
+    </div>
+</div>

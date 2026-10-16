@@ -7,10 +7,12 @@ use Flux\Flux;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Title('Profile settings')]
+#[Layout('layouts.lists')]
+#[Title('პროფილი')]
 class Profile extends Component
 {
     use ProfileValidationRules;
@@ -45,7 +47,7 @@ class Profile extends Component
 
         $user->save();
 
-        Flux::toast(variant: 'success', text: __('Profile updated.'));
+        Flux::toast(variant: 'success', text: 'პროფილი შეინახა.');
     }
 
     /**
@@ -63,7 +65,7 @@ class Profile extends Component
 
         $user->sendEmailVerificationNotification();
 
-        Flux::toast(text: __('A new verification link has been sent to your email address.'));
+        Flux::toast(text: 'დამადასტურებელი ბმული ელფოსტაზე გაიგზავნა.');
     }
 
     #[Computed]

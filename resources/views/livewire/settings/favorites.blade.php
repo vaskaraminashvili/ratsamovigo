@@ -1,16 +1,11 @@
-<section class="w-full">
-    @include('partials.settings-heading')
+@php
+    $field = 'h-12 w-full rounded-2xl bg-phone px-3 text-base text-ink outline-none ring-1 ring-transparent focus:ring-2 focus:ring-marker';
+@endphp
 
-    <h2 class="sr-only">რჩეულები</h2>
-
-    @php
-        $field = 'h-12 w-full rounded-2xl bg-phone px-3 text-base text-ink outline-none ring-1 ring-transparent focus:ring-2 focus:ring-marker';
-    @endphp
-
-    <x-settings.layout heading="რჩეულები" subheading="შენახული ნივთები და კერძები სიაში ერთი შეხებით ჩასასმელად" :wide="true">
-        <div class="space-y-10">
+<x-settings.shell title="რჩეულები" subtitle="სიაში ერთი შეხებით">
+    <div class="space-y-10">
             <section class="space-y-4">
-                <h3 class="font-sign text-xl font-bold text-ink dark:text-white">ნივთები</h3>
+                <h2 class="font-sign text-xl font-bold">ნივთები</h2>
 
                 <form wire:submit="saveItem" class="space-y-3 rounded-[28px] bg-white p-4 text-ink">
                     <label class="block text-sm text-bought">
@@ -67,12 +62,12 @@
                         </div>
                     </article>
                 @empty
-                    <p class="text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">ჯერ არაფერი გაქვს შენახული. დაამატე ღვინო, რძე, ან სხვა რაც ხშირად გჭირდება.</p>
+                    <p class="text-sm leading-relaxed text-bought">ჯერ არაფერი გაქვს შენახული. დაამატე ღვინო, რძე, ან სხვა რაც ხშირად გჭირდება.</p>
                 @endforelse
             </section>
 
             <section class="space-y-4">
-                <h3 class="font-sign text-xl font-bold text-ink dark:text-white">კერძები</h3>
+                <h2 class="font-sign text-xl font-bold">კერძები</h2>
 
                 <form wire:submit="saveDish" class="space-y-3 rounded-[28px] bg-white p-4 text-ink">
                     <label class="block text-sm text-bought">
@@ -188,9 +183,8 @@
                         @endif
                     </article>
                 @empty
-                    <p class="text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">შეინახე კერძი ინგრედიენტებით, რომ სიაში ერთი შეხებით ჩასვა.</p>
+                    <p class="text-sm leading-relaxed text-bought">შეინახე კერძი ინგრედიენტებით, რომ სიაში ერთი შეხებით ჩასვა.</p>
                 @endforelse
             </section>
-        </div>
-    </x-settings.layout>
-</section>
+    </div>
+</x-settings.shell>
