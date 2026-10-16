@@ -60,8 +60,6 @@ class Show extends Component
 
     public string $dishName = '';
 
-    public string $itemEmoji = '';
-
     public string $itemNote = '';
 
     public ?TemporaryUploadedFile $itemPhoto = null;
@@ -77,15 +75,11 @@ class Show extends Component
 
     public string $listName = '';
 
-    public string $listEmoji = '';
-
     public string $accentColor = '#059669';
 
     public string $backgroundPreset = 'sage';
 
     public string $checkboxStyle = 'box';
-
-    public bool $showEmoji = true;
 
     public bool $showQuantity = true;
 
@@ -162,7 +156,6 @@ class Show extends Component
         $this->itemName = $item->name;
         $this->itemGroup = (string) $item->group_name;
         $this->splitQuantity($item->quantity);
-        $this->itemEmoji = (string) $item->emoji;
         $this->itemNote = (string) $item->note;
         $this->itemPhoto = null;
         $this->compose = 'item';
@@ -275,7 +268,6 @@ class Show extends Component
 
     public function saveAppearance(ShoppingListService $lists): void
     {
-        $this->showEmoji = (bool) $this->showEmoji;
         $this->showQuantity = (bool) $this->showQuantity;
         $this->showLikes = (bool) $this->showLikes;
         $this->showAuthor = (bool) $this->showAuthor;
@@ -287,11 +279,9 @@ class Show extends Component
         $rules = (new UpdateShoppingListRequest)->rules();
         $validated = $this->validate([
             'listName' => $rules['name'],
-            'listEmoji' => $rules['emoji'],
             'accentColor' => $rules['accent_color'],
             'backgroundPreset' => $rules['background_preset'],
             'checkboxStyle' => $rules['checkbox_style'],
-            'showEmoji' => $rules['show_emoji'],
             'showQuantity' => $rules['show_quantity'],
             'showLikes' => $rules['show_likes'],
             'showAuthor' => $rules['show_author'],
@@ -306,11 +296,9 @@ class Show extends Component
 
         $lists->updateAppearance($this->user(), $this->shoppingList, [
             'name' => $validated['listName'],
-            'emoji' => $validated['listEmoji'] ?? null,
             'accent_color' => $validated['accentColor'],
             'background_preset' => $validated['backgroundPreset'],
             'checkbox_style' => $validated['checkboxStyle'],
-            'show_emoji' => $validated['showEmoji'],
             'show_quantity' => $validated['showQuantity'],
             'show_likes' => $validated['showLikes'],
             'show_author' => $validated['showAuthor'],
@@ -518,7 +506,6 @@ class Show extends Component
             'offers' => $offers->forList($list),
             'presets' => ListAppearance::PRESETS,
             'accents' => ListAppearance::ACCENTS,
-            'emojiChoices' => ListAppearance::EMOJI,
             'units' => ListAppearance::UNITS,
             'checkboxStyles' => CheckboxStyle::cases(),
             'readonly' => false,
@@ -543,7 +530,7 @@ class Show extends Component
     }
 
     /**
-     * @return array{name: string, quantity: ?string, emoji: ?string, note: ?string, group_name: ?string}
+     * @return array{name: string, quantity: ?string, note: ?string, group_name: ?string}
      */
     private function preparedItem(): array
     {
@@ -632,7 +619,6 @@ class Show extends Component
             [
                 'name' => $this->itemName,
                 'quantity' => $this->itemQuantity,
-                'emoji' => $this->itemEmoji,
                 'note' => $this->itemNote,
                 'photo' => $this->itemPhoto instanceof TemporaryUploadedFile ? $this->itemPhoto : null,
             ],
@@ -646,7 +632,6 @@ class Show extends Component
     private function fillAppearance(ShoppingList $list): void
     {
         $this->listName = $list->name;
-        $this->listEmoji = (string) $list->emoji;
         $this->accentColor = in_array($list->accent_color, ListAppearance::ACCENTS, true)
             ? $list->accent_color
             : ListAppearance::ACCENTS[0];
@@ -654,7 +639,6 @@ class Show extends Component
             ? $list->background_preset
             : 'sage';
         $this->checkboxStyle = $list->checkbox_style->value;
-        $this->showEmoji = $list->show_emoji;
         $this->showQuantity = $list->show_quantity;
         $this->showLikes = $list->show_likes;
         $this->showAuthor = $list->show_author;
@@ -662,7 +646,7 @@ class Show extends Component
 
     private function resetItemForm(): void
     {
-        $this->reset('itemName', 'itemQuantity', 'itemEmoji', 'itemNote', 'itemPhoto', 'editingItemId', 'itemGroup', 'dishName');
+        $this->reset('itemName', 'itemQuantity', 'itemNote', 'itemPhoto', 'editingItemId', 'itemGroup', 'dishName');
         $this->itemUnit = 'ცალი';
         $this->compose = 'item';
     }

@@ -13,9 +13,7 @@
     <form wire:submit="createList" class="mx-5 mt-3 rounded-[28px] bg-white p-4">
         <p class="text-sm font-medium text-marker">ახალი სია</p>
         <div class="mt-3 flex items-center gap-2">
-            <label class="sr-only" for="list-emoji">ემოჯი</label>
-            <input id="list-emoji" wire:model="emoji" type="text" maxlength="8" placeholder="🛒"
-                class="h-12 w-14 rounded-2xl bg-phone text-center text-base">
+
             <label class="sr-only" for="list-name">სიის სახელი</label>
             <input id="list-name" wire:model="name" type="text" placeholder="სახლის სია"
                 class="h-12 min-w-0 flex-1 rounded-2xl bg-phone px-4 text-base">

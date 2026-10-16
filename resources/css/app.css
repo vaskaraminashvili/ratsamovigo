@@ -8,8 +8,32 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+@font-face {
+    font-family: 'BPG Nino Medium';
+    src: url('../fonts/bpg-nino-medium.otf') format('opentype');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ALK Life';
+    src: url('../fonts/alk-life-regular.otf') format('opentype');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Mzeqala';
+    src: url('../fonts/mzeqala-regular.otf') format('opentype');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'ALK Life', 'Noto Sans Georgian', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
     --color-zinc-50: #fafafa;
     --color-zinc-100: #f5f5f5;
@@ -27,8 +51,10 @@
     --color-accent-content: #7b5cf6;
     --color-accent-foreground: #ffffff;
 
-    --font-slip: 'Noto Sans Georgian', ui-sans-serif, system-ui, sans-serif, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji';
-    --font-sign: 'Noto Sans Georgian', ui-sans-serif, system-ui, sans-serif, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji';
+    --font-slip: 'ALK Life', 'Noto Sans Georgian', ui-sans-serif, system-ui, sans-serif, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji';
+    --font-sign: 'BPG Nino Medium', 'Noto Sans Georgian', ui-sans-serif, system-ui, sans-serif, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji';
+    --font-alk: 'ALK Life', 'Noto Sans Georgian', ui-sans-serif, system-ui, sans-serif, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji';
+    --font-mzeqala: 'Mzeqala', 'Noto Sans Georgian', ui-sans-serif, system-ui, sans-serif, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji';
 
     --color-floor: #e6e0f4;
     --color-crate: #e6e0f4;
@@ -78,6 +104,19 @@ input:focus[data-flux-control],
 textarea:focus[data-flux-control],
 select:focus[data-flux-control] {
     @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
+}
+
+[x-cloak] {
+    display: none !important;
+}
+
+html[data-text-font='mzeqala'] {
+    --font-slip: 'Mzeqala', 'Noto Sans Georgian', ui-sans-serif, system-ui, sans-serif, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji';
+    --font-sans: 'Mzeqala', 'Noto Sans Georgian', ui-sans-serif, system-ui, sans-serif, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji';
+}
+
+.slip-ui {
+    font-synthesis: none;
 }
 
 .slip-ui :focus-visible {

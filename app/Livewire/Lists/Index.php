@@ -17,15 +17,12 @@ class Index extends Component
 {
     public string $name = '';
 
-    public string $emoji = '';
-
     public function createList(ShoppingListService $lists): void
     {
         $validated = $this->validate((new StoreShoppingListRequest)->rules(), (new StoreShoppingListRequest)->messages());
 
         $list = $lists->create($this->user(), [
             'name' => $validated['name'],
-            'emoji' => $validated['emoji'] ?? null,
         ]);
 
         $this->redirect(route('lists.show', $list), navigate: true);

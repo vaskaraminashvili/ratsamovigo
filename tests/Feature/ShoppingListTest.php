@@ -330,3 +330,42 @@ it('gives the owner a view link and an edit link to copy', function () {
     $this->get(route('lists.view', $view->token))->assertNotFound();
     expect($list->shareLinks()->where('role', ListRole::Viewer)->where('token', $view->token)->exists())->toBeFalse();
 });
+
+it('asks the owner to confirm before deleting a list from the menu', function () {
+    $owner = User::factory()->create();
+    $list = app(ShoppingListService::class)->create($owner, ['name' => 'სასურსათო']);
+
+    $this->actingAs($owner);
+
+    Livewire::test(Show::class, ['shoppingList' => $list])
+        ->set('panel', 'menu')
+        ->assertSee('სიის წაშლა')
+        ->set('panel', 'settings')
+        ->assertDontSee('სიის წაშლა')
+        ->set('panel', 'delete')
+        ->assertSee('დაბრუნება შეუძლებელია')
+        ->call('deleteList')
+        ->assertRedirect(route('lists.index'));
+
+    expect($list->fresh()->trashed())->toBeTrue();
+});
+
+it('keeps list deletion away from an editor', function () {
+    $owner = User::factory()->create();
+    $editor = User::factory()->create();
+    $list = app(ShoppingListService::class)->create($owner, ['name' => 'სასურსათო']);
+    $link = app(ShareLinkService::class)->replace($owner, $list, ListRole::Editor);
+    app(ShareLinkService::class)->join($editor, $link->token);
+
+    $this->actingAs($editor);
+
+    Livewire::test(Show::class, ['shoppingList' => $list])
+        ->set('panel', 'menu')
+        ->assertDontSee('სიის წაშლა')
+        ->set('panel', 'delete')
+        ->assertDontSee('დაბრუნება შეუძლებელია')
+        ->call('deleteList')
+        ->assertForbidden();
+
+    expect($list->fresh()->trashed())->toBeFalse();
+});

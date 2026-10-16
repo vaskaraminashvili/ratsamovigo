@@ -6,7 +6,13 @@ use App\Livewire\Lists\Preview;
 use App\Livewire\Lists\Show;
 use Illuminate\Support\Facades\Route;
 
-Route::view('/', 'welcome')->name('home');
+Route::get('/', function () {
+    if (auth()->check()) {
+        return redirect()->route('lists.index');
+    }
+
+    return view('welcome');
+})->name('home');
 
 Route::get('view/{token}', Preview::class)->name('lists.view');
 Route::get('join/{token}', Join::class)->name('lists.join');
