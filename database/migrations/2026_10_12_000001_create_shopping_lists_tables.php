@@ -19,12 +19,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('name');
-            $table->string('emoji', 16)->nullable();
             $table->string('accent_color', 7)->default('#059669');
             $table->string('background_preset', 32)->default('sage');
             $table->string('background_path')->nullable();
             $table->string('checkbox_style', 16)->default('box');
-            $table->boolean('show_emoji')->default(true);
             $table->boolean('show_quantity')->default(true);
             $table->boolean('show_likes')->default(true);
             $table->boolean('show_author')->default(true);
@@ -63,7 +61,6 @@ return new class extends Migration
             $table->foreignId('claimed_by')->nullable()->constrained('users')->nullOnDelete();
             $table->string('name');
             $table->string('quantity', 40)->nullable();
-            $table->string('emoji', 16)->nullable();
             $table->string('note', 200)->nullable();
             $table->string('photo_path')->nullable();
             $table->boolean('is_pinned')->default(false);
