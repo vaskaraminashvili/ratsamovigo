@@ -4,7 +4,7 @@
 @include('partials.text-font')
 
 <title>
-    {{ filled($title ?? null) ? $title.' - '.config('app.name', 'Laravel') : config('app.name', 'Laravel') }}
+    {{ filled($title ?? null) ? $title . ' - ' . config('app.name', 'Laravel') : config('app.name', 'Laravel') }}
 </title>
 
 <link rel="icon" href="/favicon.ico" sizes="any">
@@ -12,6 +12,6 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
 @fonts
-
+<tallstackui:script />
+@livewireStyles
 @vite(['resources/css/app.css', 'resources/js/app.js'])
-@fluxAppearance
