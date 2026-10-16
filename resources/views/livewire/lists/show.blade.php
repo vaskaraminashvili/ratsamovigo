@@ -224,6 +224,9 @@
             @if ($canEdit && $pickedCount > 0)
                 <button type="button" wire:click="clearChecked" class="h-12 w-full text-sm text-wine">მონიშნულის გასუფთავება</button>
             @endif
+            @if ($canManage)
+                <button type="button" wire:click="$set('panel', 'delete')" class="h-12 w-full text-sm text-wine">სიის წაშლა</button>
+            @endif
         </div>
     @endif
 
@@ -393,8 +396,19 @@
                 <span wire:loading.remove wire:target="saveAppearance">შენახვა</span>
                 <span wire:loading wire:target="saveAppearance">ინახება…</span>
             </button>
-            <button type="button" wire:click="deleteList" wire:confirm="სია წაიშალოს?" class="h-12 w-full text-wine">სიის წაშლა</button>
         </form>
+    @endif
+
+    @if (! $readonly && $panel === 'delete' && $canManage)
+        <div class="slip-scrim fixed inset-0 z-30 bg-ink/45" wire:click="$set('panel', 'menu')"></div>
+        <div class="slip-up fixed inset-x-4 bottom-4 z-40 mx-auto w-auto max-w-[398px] rounded-[28px] bg-white p-5 text-ink" role="alertdialog" aria-labelledby="delete-list-title" aria-describedby="delete-list-warning">
+            <h2 id="delete-list-title" class="font-sign text-xl font-bold">სიის წაშლა</h2>
+            <p id="delete-list-warning" class="mt-3 text-sm leading-relaxed text-bought">„{{ $list->name }}“ სამუდამოდ წაიშლება, ნივთებთან, გამოკითხვებთან და გაზიარების ბმულებთან ერთად. დაბრუნება შეუძლებელია.</p>
+            <div class="mt-5 grid grid-cols-2 gap-2">
+                <button type="button" wire:click="$set('panel', 'menu')" class="h-12 rounded-full bg-phone text-sm">დატოვება</button>
+                <button type="button" wire:click="deleteList" wire:loading.attr="disabled" class="h-12 rounded-full bg-wine text-sm font-medium text-white disabled:opacity-50">წაშლა</button>
+            </div>
+        </div>
     @endif
 
     @if (! $readonly && $panel === 'share' && $canManage)
